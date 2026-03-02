@@ -21,7 +21,7 @@ ORANGE_BG = "#FFEDD5"
 ORANGE_TXT = "#9A3412"
 
 
-# --------- CSS (fix invisible text + make it look like SaaS) ----------
+# --------- CSS (Figma-like layout + fixes) ----------
 st.markdown(
     f"""
     <style>
@@ -59,9 +59,6 @@ st.markdown(
         background: white !important;
         color: {PRIMARY} !important;
     }}
-    .navbtns .stButton>button:hover {{
-        border: 1px solid rgba(37,99,235,0.45) !important;
-    }}
 
     .hero-title {{ font-size: 46px; font-weight: 950; line-height:1.05; margin: 8px 0; }}
     .hero-sub {{ color: {MUTED}; font-size: 15px; max-width: 640px; }}
@@ -85,18 +82,13 @@ st.markdown(
         margin-right: 8px;
     }}
 
-    /* Inputs (fix invisible text + nicer corners) */
     textarea {{
         color: {TEXT} !important;
         background: #FFFFFF !important;
         border-radius: 14px !important;
         border: 1px solid rgba(15,23,42,0.10) !important;
     }}
-    input {{
-        color: {TEXT} !important;
-    }}
 
-    /* Primary button */
     .primary .stButton>button {{
         background:{PRIMARY} !important;
         color:white !important;
@@ -106,7 +98,6 @@ st.markdown(
         height: 44px !important;
     }}
 
-    /* Skill chips */
     .chip {{
         display:inline-block;
         padding: 6px 10px;
@@ -119,7 +110,6 @@ st.markdown(
     .chip-green {{ background:{GREEN_BG}; color:{GREEN_TXT}; }}
     .chip-orange {{ background:{ORANGE_BG}; color:{ORANGE_TXT}; }}
 
-    /* Circle score */
     .ring {{
         width: 160px; height: 160px; border-radius: 999px;
         display:flex; align-items:center; justify-content:center;
@@ -135,8 +125,7 @@ st.markdown(
         border: 1px solid rgba(15,23,42,0.08);
     }}
     .score {{ font-size: 38px; font-weight: 950; line-height: 1; }}
-    .score-sub {{ color:{MUTED}; font-weight: 700; font-size: 12px; margin-top: 4px; }}
-
+    .score-sub {{ color:{MUTED}; font-weight: 800; font-size: 12px; margin-top: 4px; }}
     </style>
     """,
     unsafe_allow_html=True
@@ -256,10 +245,10 @@ def home():
 
     with c2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown("<b>Quick Preview</b><div class='smallmuted'>Example output</div>", unsafe_allow_html=True)
+        st.markdown("<b>Quick Preview</b><br/><span style='color:#475569; font-size:13px;'>Example output</span>", unsafe_allow_html=True)
         st.markdown("<br/>", unsafe_allow_html=True)
         st.metric("Match Score", "87%")
-        st.markdown("<div class='smallmuted'>Analysis ~2 seconds</div>", unsafe_allow_html=True)
+        st.markdown("<span style='color:#475569; font-size:13px;'>Analysis ~2 seconds</span>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<br/><br/>", unsafe_allow_html=True)
