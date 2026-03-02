@@ -258,51 +258,44 @@ def go(p: str):
     st.rerun()
 
 
-# ---------------- NAVBAR (Clean Figma-style) ----------------
-
+# ---------------- NAVBAR (HTML) ----------------
 st.markdown("""
 <div style="
-    position: sticky;
-    top: 0;
-    background: rgba(247,248,250,0.95);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(15,23,42,0.08);
-    padding: 14px 0;
-    z-index: 999;
+  position: sticky; top: 0; z-index: 999;
+  background: rgba(247,248,250,0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(15,23,42,0.08);
 ">
   <div style="
-      max-width:1120px;
-      margin:0 auto;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding:0 10px;
+    max-width:1120px; margin:0 auto;
+    padding:14px 10px;
+    display:flex; align-items:center; justify-content:space-between;
   ">
-    <div style="display:flex; align-items:center; gap:10px; font-weight:900;">
+    <div style="display:flex; align-items:center; gap:10px; font-weight:950;">
       <div style="
-          width:34px;
-          height:34px;
-          background:#2563EB;
-          border-radius:10px;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          color:white;
-          font-weight:900;
+        width:34px; height:34px; border-radius:10px; background:#2563EB;
+        display:flex; align-items:center; justify-content:center;
+        color:white; font-weight:950;
       ">🧠</div>
       AI Match
     </div>
 
-    <div style="display:flex; gap:28px; font-weight:800;">
-      <a href="/" style="text-decoration:none; color:#475569;">Home</a>
-      <a href="/?page=Dashboard" style="text-decoration:none; color:#475569;">Dashboard</a>
-      <a href="/?page=About" style="text-decoration:none; color:#475569;">About</a>
-      <a href="/?page=Contact" style="text-decoration:none; color:#475569;">Contact</a>
+    <div style="display:flex; gap:26px; font-weight:850;">
+      <a href="/?page=Home" target="_self" style="text-decoration:none; color:#475569;">Home</a>
+      <a href="/?page=Dashboard" target="_self" style="text-decoration:none; color:#475569;">Dashboard</a>
+      <a href="/?page=About" target="_self" style="text-decoration:none; color:#475569;">About</a>
+      <a href="/?page=Contact" target="_self" style="text-decoration:none; color:#475569;">Contact</a>
     </div>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
+# --- read page from URL ---
+page = st.query_params.get("page")
+if isinstance(page, list):
+    page = page[0]
+if not page:
+    page = "Home"
 
 
 # Links right side
@@ -498,11 +491,13 @@ def page_contact():
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-if st.session_state.page == "Home":
+if page == "Home":
     page_home()
-elif st.session_state.page == "Dashboard":
+elif page == "Dashboard":
     page_dashboard()
-elif st.session_state.page == "About":
+elif page == "About":
     page_about()
-else:
+elif page == "Contact":
     page_contact()
+else:
+    page_home()
