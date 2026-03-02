@@ -8,48 +8,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 
+# ---------------- CONFIG ----------------
 st.set_page_config(page_title="AI Match", page_icon="🧠", layout="wide")
-
-# ---------------- CLEAN NAVBAR (ONE ONLY) ----------------
-st.markdown("""
-<div style="
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:14px 20px;
-  border-bottom:1px solid rgba(0,0,0,0.05);
-  font-weight:850;
-  background: rgba(247,248,250,0.95);
-  backdrop-filter: blur(10px);
-  position: sticky;
-  top: 0;
-  z-index: 999;
-">
-  <div style="font-size:18px; font-weight:950; display:flex; align-items:center; gap:10px;">
-    <span style="
-      width:34px; height:34px; border-radius:10px; background:#2563EB;
-      display:flex; align-items:center; justify-content:center;
-      color:white; font-weight:950;
-    ">🧠</span>
-    AI Match
-  </div>
-
-  <div style="display:flex; gap:26px;">
-    <a href="/?page=Home" target="_self" style="text-decoration:none; color:#475569;">Home</a>
-    <a href="/?page=Dashboard" target="_self" style="text-decoration:none; color:#475569;">Dashboard</a>
-    <a href="/?page=About" target="_self" style="text-decoration:none; color:#475569;">About</a>
-    <a href="/?page=Contact" target="_self" style="text-decoration:none; color:#475569;">Contact</a>
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-# --- URL routing (ONE ONLY) ---
-page = st.query_params.get("page")
-if isinstance(page, list):
-    page = page[0]
-if not page:
-    page = "Home"
-
 
 PRIMARY = "#2563EB"
 BG = "#F7F8FA"
@@ -65,12 +25,14 @@ ORANGE_BG = "#FFEDD5"
 ORANGE_TXT = "#9A3412"
 
 
-# ---------- CSS ----------
+# ---------------- CSS ----------------
 st.markdown(
     f"""
     <style>
-      [data-testid="stSidebar"] {{display:none;}}
-      header, footer, #MainMenu {{visibility:hidden;}}
+      /* Hide Streamlit chrome */
+      #MainMenu {{visibility:hidden;}}
+      header {{visibility:hidden;}}
+      footer {{visibility:hidden;}}
 
       .stApp {{ background: {BG}; color: {TEXT}; }}
 
@@ -80,6 +42,61 @@ st.markdown(
         padding: 0 10px 60px;
       }}
 
+      /* Navbar */
+      .nav {{
+        position: sticky;
+        top: 0;
+        z-index: 999;
+        background: rgba(247,248,250,0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(15,23,42,0.08);
+      }}
+      .nav-inner {{
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 14px 10px;
+        display:flex;
+        align-items:center;
+        justify-content: space-between;
+      }}
+      .brand {{
+        display:flex;
+        align-items:center;
+        gap: 10px;
+        font-weight: 950;
+      }}
+      .logo {{
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: {PRIMARY};
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        color: white;
+        font-weight: 950;
+      }}
+
+      /* Make nav buttons look like links */
+      .navlinks .stButton>button {{
+        background: transparent !important;
+        border: none !important;
+        color: {MUTED} !important;
+        font-weight: 850 !important;
+        padding: 8px 10px !important;
+        border-radius: 10px !important;
+        height: auto !important;
+      }}
+      .navlinks .stButton>button:hover {{
+        background: rgba(37,99,235,0.08) !important;
+        color: {PRIMARY} !important;
+      }}
+      .active .stButton>button {{
+        background: rgba(37,99,235,0.12) !important;
+        color: {PRIMARY} !important;
+      }}
+
+      /* Cards */
       .card {{
         background: {CARD};
         border: 1px solid {BORDER};
@@ -112,13 +129,18 @@ st.markdown(
         margin-right: 8px;
       }}
 
+      /* Inputs - force visible text */
       textarea {{
         color: {TEXT} !important;
         background: #FFFFFF !important;
         border-radius: 14px !important;
         border: 1px solid {BORDER} !important;
       }}
+      input {{
+        color: {TEXT} !important;
+      }}
 
+      /* Primary button */
       .primary .stButton>button {{
         background:{PRIMARY} !important;
         color:white !important;
@@ -128,6 +150,7 @@ st.markdown(
         height: 44px !important;
       }}
 
+      /* Chips */
       .chip {{
         display:inline-block;
         padding: 6px 10px;
@@ -140,6 +163,7 @@ st.markdown(
       .chip-green {{ background:{GREEN_BG}; color:{GREEN_TXT}; }}
       .chip-orange {{ background:{ORANGE_BG}; color:{ORANGE_TXT}; }}
 
+      /* Score ring */
       .ring {{
         width: 150px; height: 150px; border-radius: 999px;
         display:flex; align-items:center; justify-content:center;
@@ -161,31 +185,13 @@ st.markdown(
         margin-top: 12px;
         margin-bottom: 6px;
       }}
-
-      .navbtn {{
-        display:block;
-        width:100%;
-        padding:12px 16px;
-        border-radius:14px;
-        font-weight:950;
-        text-align:center;
-      }}
-      .navbtn-primary {{
-        background:{PRIMARY};
-        color:white;
-      }}
-      .navbtn-secondary {{
-        background:white;
-        color:{TEXT};
-        border:1px solid rgba(15,23,42,0.12);
-      }}
     </style>
     """,
     unsafe_allow_html=True
 )
 
 
-# ---------------- AI / NLP ----------------
+# ---------------- NLP ----------------
 def extract_text(filename: str, file_bytes: bytes) -> str:
     name = filename.lower()
     if name.endswith(".pdf"):
@@ -247,6 +253,56 @@ def compute_all(cv_text: str, jd_text: str):
     return final, sim, sk, matched, missing
 
 
+# ---------------- NAV (THIS FIXES YOUR PROBLEM) ----------------
+PAGES = ["Home", "Dashboard", "About", "Contact"]
+
+if "page" not in st.session_state:
+    st.session_state.page = "Home"
+
+# If URL has ?page=... use it, otherwise keep session_state (so uploads don't kick you back Home)
+qp = st.query_params.get("page")
+if qp in PAGES:
+    st.session_state.page = qp
+
+def set_page(p: str):
+    st.session_state.page = p
+    st.query_params["page"] = p   # keep URL in sync (important!)
+    st.rerun()
+
+
+# ---------------- NAVBAR UI ----------------
+st.markdown('<div class="nav"><div class="nav-inner">', unsafe_allow_html=True)
+st.markdown(
+    f"""
+    <div class="brand">
+      <div class="logo">🧠</div>
+      <div>AI Match</div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+nav1, nav2, nav3, nav4 = st.columns([1, 1, 1, 1], vertical_alignment="center")
+st.markdown("</div></div>", unsafe_allow_html=True)
+
+# Buttons row under navbar (stable + doesn’t break on reruns)
+st.markdown('<div class="wrap"><div class="navlinks">', unsafe_allow_html=True)
+b1, b2, b3, b4 = st.columns([1, 1, 1, 1])
+
+def nav_btn(label, target):
+    cls = "active" if st.session_state.page == target else ""
+    st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
+    if st.button(label, use_container_width=True, key=f"nav_{target}"):
+        set_page(target)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+with b1: nav_btn("Home", "Home")
+with b2: nav_btn("Dashboard", "Dashboard")
+with b3: nav_btn("About", "About")
+with b4: nav_btn("Contact", "Contact")
+st.markdown("</div></div>", unsafe_allow_html=True)
+
+
 # ---------------- PAGES ----------------
 def page_home():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
@@ -260,23 +316,21 @@ def page_home():
             unsafe_allow_html=True
         )
 
-        b1, b2 = st.columns(2)
-        with b1:
-            st.markdown("""
-            <a href="/?page=Dashboard" target="_self" style="text-decoration:none;">
-              <div class="navbtn navbtn-primary">Try Now →</div>
-            </a>
-            """, unsafe_allow_html=True)
-
-        with b2:
-            st.markdown("""
-            <a href="/?page=About" target="_self" style="text-decoration:none;">
-              <div class="navbtn navbtn-secondary">Learn More</div>
-            </a>
-            """, unsafe_allow_html=True)
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown('<div class="primary">', unsafe_allow_html=True)
+            if st.button("Try Now →", use_container_width=True, key="home_try"):
+                set_page("Dashboard")
+            st.markdown("</div>", unsafe_allow_html=True)
+        with c2:
+            if st.button("Learn More", use_container_width=True, key="home_learn"):
+                set_page("About")
 
         st.markdown("<br/>", unsafe_allow_html=True)
-        st.markdown('<span class="pill">Free to use</span><span class="pill">Instant results</span><span class="pill">AI-powered</span>', unsafe_allow_html=True)
+        st.markdown(
+            '<span class="pill">Free to use</span><span class="pill">Instant results</span><span class="pill">AI-powered</span>',
+            unsafe_allow_html=True
+        )
 
     with right:
         st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -297,7 +351,7 @@ def page_home():
         ("Accurate Matching","Skill match + similarity scoring for better decisions."),
         ("Secure & Private","Your data is processed securely with privacy protection.")
     ]
-    for col, (t, d) in zip([f1,f2,f3,f4], feats):
+    for col, (t, d) in zip([f1, f2, f3, f4], feats):
         with col:
             st.markdown('<div class="card">', unsafe_allow_html=True)
             st.markdown(f"<b>{t}</b><br/><span style='color:#475569; font-size:13px;'>{d}</span>", unsafe_allow_html=True)
@@ -308,22 +362,40 @@ def page_home():
 
 def page_dashboard():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
-
     st.markdown("<div class='title' style='font-size:34px;'>CV Analysis Dashboard</div>", unsafe_allow_html=True)
     st.markdown("<div class='subtitle'>Upload your CV and paste a job description to get instant AI-powered insights.</div>", unsafe_allow_html=True)
+
+    # Persist input across reruns (THIS is another reason things “reset”)
+    if "jd_text" not in st.session_state:
+        st.session_state.jd_text = ""
+    if "cv_name" not in st.session_state:
+        st.session_state.cv_name = None
+    if "cv_bytes" not in st.session_state:
+        st.session_state.cv_bytes = None
 
     left, right = st.columns([1, 1])
 
     with left:
         st.markdown('<div class="card">', unsafe_allow_html=True)
+
         st.markdown("<div class='h'>Upload CV</div>", unsafe_allow_html=True)
-        cv_file = st.file_uploader("PDF, DOCX, or TXT", type=["pdf", "docx", "txt"])
+        up = st.file_uploader("PDF, DOCX, or TXT", type=["pdf", "docx", "txt"], key="cv_uploader")
+        if up is not None:
+            st.session_state.cv_name = up.name
+            st.session_state.cv_bytes = up.read()
+
         st.markdown("<div class='h'>Job Description</div>", unsafe_allow_html=True)
-        jd = st.text_area("Paste the job description here...", height=240)
+        st.session_state.jd_text = st.text_area(
+            "Paste the job description here...",
+            height=240,
+            value=st.session_state.jd_text,
+            key="jd_area"
+        )
 
         st.markdown('<div class="primary">', unsafe_allow_html=True)
-        run = st.button("✨ Analyze Match", use_container_width=True)
+        run = st.button("✨ Analyze Match", use_container_width=True, key="analyze_btn")
         st.markdown("</div>", unsafe_allow_html=True)
+
         st.markdown("</div>", unsafe_allow_html=True)
 
     with right:
@@ -331,13 +403,13 @@ def page_dashboard():
         st.markdown("<div class='h'>Results</div>", unsafe_allow_html=True)
 
         if run:
-            if not cv_file:
+            if not st.session_state.cv_bytes or not st.session_state.cv_name:
                 st.error("Upload a CV first.")
-            elif not jd.strip():
+            elif not st.session_state.jd_text.strip():
                 st.error("Paste a job description first.")
             else:
-                cv_text = extract_text(cv_file.name, cv_file.read())
-                final, sim, sk, matched, missing = compute_all(cv_text, jd)
+                cv_text = extract_text(st.session_state.cv_name, st.session_state.cv_bytes)
+                final, sim, sk, matched, missing = compute_all(cv_text, st.session_state.jd_text)
 
                 p = max(0, min(100, int(final)))
                 st.markdown(
@@ -392,7 +464,7 @@ def page_about():
         <b>AI Match</b> compares a candidate CV with a job description to produce a match score and skill gap analysis.
         <br/><br/>
         <b>Methods</b><br/>
-        • Text extraction (PDF/DOCX)<br/>
+        • Text extraction (PDF/DOCX/TXT)<br/>
         • TF-IDF vectorization + Cosine similarity<br/>
         • Keyword-based skill extraction<br/>
         • Combined scoring (skills-weighted)
@@ -418,12 +490,12 @@ def page_contact():
     with c2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown("<b>Send us a message</b>", unsafe_allow_html=True)
-        st.text_input("Name")
-        st.text_input("Email")
-        st.text_input("Subject")
-        st.text_area("Message", height=160)
+        st.text_input("Name", key="c_name")
+        st.text_input("Email", key="c_email")
+        st.text_input("Subject", key="c_subject")
+        st.text_area("Message", height=160, key="c_msg")
         st.markdown('<div class="primary">', unsafe_allow_html=True)
-        st.button("Send Message", use_container_width=True)
+        st.button("Send Message", use_container_width=True, key="send_msg")
         st.markdown("</div>", unsafe_allow_html=True)
         st.caption("Demo UI only (no email sending yet).")
         st.markdown("</div>", unsafe_allow_html=True)
@@ -432,13 +504,14 @@ def page_contact():
 
 
 # ---------------- ROUTER ----------------
-if page == "Home":
+if st.session_state.page == "Home":
     page_home()
-elif page == "Dashboard":
+elif st.session_state.page == "Dashboard":
     page_dashboard()
-elif page == "About":
+elif st.session_state.page == "About":
     page_about()
-elif page == "Contact":
+elif st.session_state.page == "Contact":
     page_contact()
 else:
+    st.session_state.page = "Home"
     page_home()
