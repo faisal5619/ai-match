@@ -36,7 +36,7 @@ def clean_text(t: str) -> str:
     return t
 
 
-def match_score(cv_text: str, jd_text: str) -> float:
+def tfidf_similarity_score(cv_text: str, jd_text: str) -> float:
     cv = clean_text(cv_text)
     jd = clean_text(jd_text)
 
@@ -46,23 +46,71 @@ def match_score(cv_text: str, jd_text: str) -> float:
     vec = TfidfVectorizer(ngram_range=(1, 2), stop_words="english")
     m = vec.fit_transform([cv, jd])
     sim = cosine_similarity(m[0:1], m[1:2])[0][0]
-    return max(0.0, min(1.0, float(sim))) * 100
+    return max(0.0, min(1.0, float(sim))) * 100.0
 
 
+# Expanded skill list to better match real CV/JD wording
 SKILLS = {
-    "java","python","sql","git","docker","aws","azure","api","rest","machine learning","nlp",
-    "data analysis","javascript","typescript","react","html","css","linux",
-    "teamwork","problem solving","time management","communication"
+    # programming
+    "java", "python", "c", "c++", "c#",
+    "javascript", "typescript", "html", "css",
+
+    # ai/data
+    "ai", "artificial intelligence", "machine learning", "deep learning", "nlp", "data analysis",
+
+    # tools/platforms
+    "git", "linux", "docker", "aws", "azure",
+    "api", "rest", "rest api",
+
+    # office
+    "microsoft office", "word", "excel", "powerpoint",
+
+    # education / domain
+    "computer science", "software", "programming",
+
+    # soft skills
+    "teamwork", "collaboration", "problem solving", "time management", "communication",
+    "english", "arabic",
 }
 
 
 def find_skills(text: str) -> set:
-    t = text.lower()
+    t = clean_text(text)
     found = set()
     for s in SKILLS:
-        if re.search(r"\b" + re.escape(s) + r"\b", t):
+        pattern = r"\b" + re.escape(s) + r"\b"
+        if re.search(pattern, t):
             found.add(s)
     return found
+
+
+def skill_match_score(cv_text: str, jd_text: str) -> float:
+    cv_sk = find_skills(cv_text)
+    jd_sk = find_skills(jd_text)
+
+    if not jd_sk:
+        return 0.0
+
+    return (len(cv_sk & jd_sk) / len(jd_sk)) * 100.0
+
+
+def final_score(cv_text: str, jd_text: str) -> tuple[float, float, float, list[str], list[str]]:
+    sim = tfidf_similarity_score(cv_text, jd_text)
+    sk = skill_match_score(cv_text, jd_text)
+
+    # If JD has no detectable skills, fallback to similarity only
+    if sk == 0.0:
+        final = sim
+    else:
+        # Weight skills more because TF-IDF is harsh on short CVs
+        final = 0.35 * sim + 0.65 * sk
+
+    cv_sk = find_skills(cv_text)
+    jd_sk = find_skills(jd_text)
+    matched = sorted(cv_sk & jd_sk)
+    missing = sorted(jd_sk - cv_sk)
+
+    return final, sim, sk, matched, missing
 
 
 st.set_page_config(page_title="AI Match", page_icon="🧠", layout="wide")
@@ -87,23 +135,26 @@ with right:
         else:
             try:
                 cv_text = extract_text(cv_file.name, cv_file.read())
-                score = match_score(cv_text, jd)
 
-                cv_sk = find_skills(cv_text)
-                jd_sk = find_skills(jd)
-                matched = sorted(cv_sk & jd_sk)
-                missing = sorted(jd_sk - cv_sk)
+                final, sim, sk, matched, missing = final_score(cv_text, jd)
 
-                st.metric("Match Score", f"{score:.0f}%")
-                st.write("✅ Matched Skills:", ", ".join(matched) if matched else "None")
-                st.write("⚠️ Missing Skills:", ", ".join(missing) if missing else "None")
+                st.metric("Match Score", f"{final:.0f}%")
+
+                with st.expander("Score breakdown (for debugging)"):
+                    st.write(f"TF-IDF Similarity: **{sim:.1f}%**")
+                    st.write(f"Skill Match: **{sk:.1f}%**")
+                    st.write("Final Score = 35% Similarity + 65% Skill Match (if skills found)")
+
+                st.write("✅ Matched Skills:", ", ".join(matched) if matched else "None detected")
+                st.write("⚠️ Missing Skills:", ", ".join(missing) if missing else "None detected")
 
                 st.write("### Recommendations")
                 if missing:
-                    for s in missing[:8]:
-                        st.write(f"- Consider adding or highlighting: {s}")
+                    st.write("If you truly have these, add them clearly to your CV:")
+                    for s in missing[:10]:
+                        st.write(f"- {s}")
                 else:
-                    st.write("Your CV aligns well with this job description.")
+                    st.write("Your CV aligns well with this job description based on detected skills.")
 
             except Exception as e:
                 st.error(f"Error: {e}")
