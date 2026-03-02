@@ -1,4 +1,3 @@
-
 import re
 from io import BytesIO
 
@@ -8,7 +7,49 @@ from docx import Document
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
+
 st.set_page_config(page_title="AI Match", page_icon="🧠", layout="wide")
+
+# ---------------- CLEAN NAVBAR (ONE ONLY) ----------------
+st.markdown("""
+<div style="
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 20px;
+  border-bottom:1px solid rgba(0,0,0,0.05);
+  font-weight:850;
+  background: rgba(247,248,250,0.95);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 999;
+">
+  <div style="font-size:18px; font-weight:950; display:flex; align-items:center; gap:10px;">
+    <span style="
+      width:34px; height:34px; border-radius:10px; background:#2563EB;
+      display:flex; align-items:center; justify-content:center;
+      color:white; font-weight:950;
+    ">🧠</span>
+    AI Match
+  </div>
+
+  <div style="display:flex; gap:26px;">
+    <a href="/?page=Home" target="_self" style="text-decoration:none; color:#475569;">Home</a>
+    <a href="/?page=Dashboard" target="_self" style="text-decoration:none; color:#475569;">Dashboard</a>
+    <a href="/?page=About" target="_self" style="text-decoration:none; color:#475569;">About</a>
+    <a href="/?page=Contact" target="_self" style="text-decoration:none; color:#475569;">Contact</a>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+# --- URL routing (ONE ONLY) ---
+page = st.query_params.get("page")
+if isinstance(page, list):
+    page = page[0]
+if not page:
+    page = "Home"
+
 
 PRIMARY = "#2563EB"
 BG = "#F7F8FA"
@@ -39,61 +80,6 @@ st.markdown(
         padding: 0 10px 60px;
       }}
 
-      /* Navbar */
-      .nav {{
-        position: sticky;
-        top: 0;
-        z-index: 99;
-        background: rgba(247,248,250,0.92);
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid rgba(15,23,42,0.08);
-      }}
-      .nav-inner {{
-        max-width: 1120px;
-        margin: 0 auto;
-        padding: 14px 10px;
-        display:flex;
-        align-items:center;
-        justify-content: space-between;
-      }}
-      .brand {{
-        display:flex;
-        align-items:center;
-        gap: 10px;
-        font-weight: 950;
-      }}
-      .logo {{
-        width: 34px;
-        height: 34px;
-        border-radius: 10px;
-        background: {PRIMARY};
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        color: white;
-        font-weight: 950;
-      }}
-
-      /* Make nav buttons look like links */
-      .navlinks .stButton>button {{
-        background: transparent !important;
-        border: none !important;
-        color: {MUTED} !important;
-        font-weight: 850 !important;
-        padding: 8px 10px !important;
-        border-radius: 10px !important;
-        height: auto !important;
-      }}
-      .navlinks .stButton>button:hover {{
-        background: rgba(37,99,235,0.08) !important;
-        color: {PRIMARY} !important;
-      }}
-      .active .stButton>button {{
-        background: rgba(37,99,235,0.12) !important;
-        color: {PRIMARY} !important;
-      }}
-
-      /* Common UI */
       .card {{
         background: {CARD};
         border: 1px solid {BORDER};
@@ -126,7 +112,6 @@ st.markdown(
         margin-right: 8px;
       }}
 
-      /* Inputs */
       textarea {{
         color: {TEXT} !important;
         background: #FFFFFF !important;
@@ -134,7 +119,6 @@ st.markdown(
         border: 1px solid {BORDER} !important;
       }}
 
-      /* Primary button */
       .primary .stButton>button {{
         background:{PRIMARY} !important;
         color:white !important;
@@ -144,7 +128,6 @@ st.markdown(
         height: 44px !important;
       }}
 
-      /* Chips */
       .chip {{
         display:inline-block;
         padding: 6px 10px;
@@ -157,7 +140,6 @@ st.markdown(
       .chip-green {{ background:{GREEN_BG}; color:{GREEN_TXT}; }}
       .chip-orange {{ background:{ORANGE_BG}; color:{ORANGE_TXT}; }}
 
-      /* Score ring */
       .ring {{
         width: 150px; height: 150px; border-radius: 999px;
         display:flex; align-items:center; justify-content:center;
@@ -174,11 +156,28 @@ st.markdown(
       .score {{ font-size: 36px; font-weight: 950; line-height: 1; }}
       .score-sub {{ color:{MUTED}; font-weight: 850; font-size: 12px; margin-top: 4px; }}
 
-      /* Section headings */
       .h {{
         font-weight: 950;
         margin-top: 12px;
         margin-bottom: 6px;
+      }}
+
+      .navbtn {{
+        display:block;
+        width:100%;
+        padding:12px 16px;
+        border-radius:14px;
+        font-weight:950;
+        text-align:center;
+      }}
+      .navbtn-primary {{
+        background:{PRIMARY};
+        color:white;
+      }}
+      .navbtn-secondary {{
+        background:white;
+        color:{TEXT};
+        border:1px solid rgba(15,23,42,0.12);
       }}
     </style>
     """,
@@ -248,69 +247,6 @@ def compute_all(cv_text: str, jd_text: str):
     return final, sim, sk, matched, missing
 
 
-# ---------------- NAV STATE ----------------
-if "page" not in st.session_state:
-    st.session_state.page = "Home"
-
-def go(p: str):
-    st.session_state.page = p
-    st.rerun()
-
-
-# ---------------- NAVBAR (HTML) ----------------
-st.markdown("""
-<div style="
-  position: sticky; top: 0; z-index: 999;
-  background: rgba(247,248,250,0.95);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(15,23,42,0.08);
-">
-  <div style="
-    max-width:1120px; margin:0 auto;
-    padding:14px 10px;
-    display:flex; align-items:center; justify-content:space-between;
-  ">
-    <div style="display:flex; align-items:center; gap:10px; font-weight:950;">
-      <div style="
-        width:34px; height:34px; border-radius:10px; background:#2563EB;
-        display:flex; align-items:center; justify-content:center;
-        color:white; font-weight:950;
-      ">🧠</div>
-      AI Match
-    </div>
-
-    <div style="display:flex; gap:26px; font-weight:850;">
-      <a href="/?page=Home" target="_self" style="text-decoration:none; color:#475569;">Home</a>
-      <a href="/?page=Dashboard" target="_self" style="text-decoration:none; color:#475569;">Dashboard</a>
-      <a href="/?page=About" target="_self" style="text-decoration:none; color:#475569;">About</a>
-      <a href="/?page=Contact" target="_self" style="text-decoration:none; color:#475569;">Contact</a>
-    </div>
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-# --- read page from URL ---
-page = st.query_params.get("page")
-if isinstance(page, list):
-    page = page[0]
-if not page:
-    page = "Home"
-
-
-# Links right side
-cL, cR = st.columns([2, 3])
-with cR:
-    cols = st.columns([1, 1, 1, 1])
-    pages = [("Home","Home"),("Dashboard","Dashboard"),("About","About"),("Contact","Contact")]
-    for (col, (label, key)) in zip(cols, pages):
-        with col:
-            cls = "active" if st.session_state.page == key else "navlinks"
-            st.markdown(f"<div class='{cls}'>", unsafe_allow_html=True)
-            if st.button(label, use_container_width=True):
-                go(key)
-            st.markdown("</div>", unsafe_allow_html=True)
-
-
 # ---------------- PAGES ----------------
 def page_home():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
@@ -326,13 +262,18 @@ def page_home():
 
         b1, b2 = st.columns(2)
         with b1:
-            st.markdown('<div class="primary">', unsafe_allow_html=True)
-            if st.button("Try Now →", use_container_width=True):
-                go("Dashboard")
-            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown("""
+            <a href="/?page=Dashboard" target="_self" style="text-decoration:none;">
+              <div class="navbtn navbtn-primary">Try Now →</div>
+            </a>
+            """, unsafe_allow_html=True)
+
         with b2:
-            if st.button("Learn More", use_container_width=True):
-                go("About")
+            st.markdown("""
+            <a href="/?page=About" target="_self" style="text-decoration:none;">
+              <div class="navbtn navbtn-secondary">Learn More</div>
+            </a>
+            """, unsafe_allow_html=True)
 
         st.markdown("<br/>", unsafe_allow_html=True)
         st.markdown('<span class="pill">Free to use</span><span class="pill">Instant results</span><span class="pill">AI-powered</span>', unsafe_allow_html=True)
@@ -477,10 +418,10 @@ def page_contact():
     with c2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown("<b>Send us a message</b>", unsafe_allow_html=True)
-        name = st.text_input("Name")
-        email = st.text_input("Email")
-        subject = st.text_input("Subject")
-        msg = st.text_area("Message", height=160)
+        st.text_input("Name")
+        st.text_input("Email")
+        st.text_input("Subject")
+        st.text_area("Message", height=160)
         st.markdown('<div class="primary">', unsafe_allow_html=True)
         st.button("Send Message", use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
@@ -490,6 +431,7 @@ def page_contact():
     st.markdown("</div>", unsafe_allow_html=True)
 
 
+# ---------------- ROUTER ----------------
 if page == "Home":
     page_home()
 elif page == "Dashboard":
