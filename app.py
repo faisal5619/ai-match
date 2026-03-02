@@ -8,166 +8,152 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-# =========================
-# Page setup
-# =========================
 st.set_page_config(page_title="AI Match", page_icon="🧠", layout="wide")
 
 PRIMARY = "#2563EB"
 BG = "#F7F8FA"
 CARD = "#FFFFFF"
-TEXT_MUTED = "rgba(0,0,0,0.65)"
+TEXT = "#0F172A"
+MUTED = "#475569"
+GREEN_BG = "#DCFCE7"
+GREEN_TXT = "#166534"
+ORANGE_BG = "#FFEDD5"
+ORANGE_TXT = "#9A3412"
 
-# Hide Streamlit sidebar and default menu/footer
+
+# --------- CSS (fix invisible text + make it look like SaaS) ----------
 st.markdown(
     f"""
     <style>
-      .stApp {{ background: {BG}; }}
-      [data-testid="stSidebar"] {{ display: none; }}
-      #MainMenu {{ visibility: hidden; }}
-      footer {{ visibility: hidden; }}
-      header {{ visibility: hidden; }}
+    [data-testid="stSidebar"] {{display:none;}}
+    header, footer, #MainMenu {{visibility:hidden;}}
 
-      .container {{
-        max-width: 1080px;
-        margin: 0 auto;
-        padding: 10px 10px 60px 10px;
-      }}
+    .stApp {{ background: {BG}; color: {TEXT}; }}
 
-      .navbar {{
-        position: sticky;
-        top: 0;
-        z-index: 999;
-        background: rgba(247,248,250,0.9);
+    .wrap {{ max-width: 1120px; margin: 0 auto; padding: 14px 10px 60px; }}
+
+    .topbar {{
+        background: rgba(247,248,250,0.92);
         backdrop-filter: blur(10px);
-        border-bottom: 1px solid rgba(0,0,0,0.06);
+        border-bottom: 1px solid rgba(15,23,42,0.08);
+        position: sticky; top: 0; z-index: 99;
         padding: 14px 0;
-      }}
+        margin-bottom: 18px;
+    }}
+    .topbar-inner {{
+        max-width: 1120px; margin: 0 auto; padding: 0 10px;
+        display:flex; align-items:center; justify-content:space-between;
+    }}
+    .brand {{ display:flex; align-items:center; gap:10px; font-weight:900; }}
+    .logo {{
+        width:34px; height:34px; border-radius:10px;
+        background:{PRIMARY}; color:white; display:flex; align-items:center; justify-content:center;
+        font-weight:900;
+    }}
 
-      .nav-inner {{
-        max-width: 1080px;
-        margin: 0 auto;
-        padding: 0 10px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }}
+    .navbtns .stButton>button {{
+        border-radius: 12px !important;
+        height: 40px !important;
+        font-weight: 800 !important;
+        border: 1px solid rgba(37,99,235,0.25) !important;
+        background: white !important;
+        color: {PRIMARY} !important;
+    }}
+    .navbtns .stButton>button:hover {{
+        border: 1px solid rgba(37,99,235,0.45) !important;
+    }}
 
-      .brand {{
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: 800;
-        font-size: 16px;
-      }}
+    .hero-title {{ font-size: 46px; font-weight: 950; line-height:1.05; margin: 8px 0; }}
+    .hero-sub {{ color: {MUTED}; font-size: 15px; max-width: 640px; }}
 
-      .logo {{
-        width: 34px;
-        height: 34px;
-        border-radius: 10px;
-        background: {PRIMARY};
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 900;
-      }}
+    .card {{
+        background:{CARD};
+        border: 1px solid rgba(15,23,42,0.08);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,0.06);
+        padding: 18px;
+    }}
 
-      .pill {{
-        display: inline-block;
+    .pill {{
+        display:inline-block;
         padding: 6px 10px;
         border-radius: 999px;
         background: rgba(37,99,235,0.10);
         color: {PRIMARY};
-        font-weight: 700;
-        font-size: 12px;
-      }}
-
-      .title {{
-        font-size: 44px;
-        font-weight: 900;
-        margin: 10px 0 6px 0;
-        line-height: 1.08;
-      }}
-
-      .subtitle {{
-        font-size: 16px;
-        color: {TEXT_MUTED};
-        margin-bottom: 18px;
-        max-width: 640px;
-      }}
-
-      .card {{
-        background: {CARD};
-        padding: 18px;
-        border-radius: 18px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-        border: 1px solid rgba(0,0,0,0.05);
-      }}
-
-      .section-title {{
         font-weight: 800;
-        font-size: 18px;
-        margin-bottom: 12px;
-      }}
+        font-size: 12px;
+        margin-right: 8px;
+    }}
 
-      .feature {{
-        padding: 14px;
-        border-radius: 16px;
-        border: 1px solid rgba(0,0,0,0.06);
+    /* Inputs (fix invisible text + nicer corners) */
+    textarea {{
+        color: {TEXT} !important;
+        background: #FFFFFF !important;
+        border-radius: 14px !important;
+        border: 1px solid rgba(15,23,42,0.10) !important;
+    }}
+    input {{
+        color: {TEXT} !important;
+    }}
+
+    /* Primary button */
+    .primary .stButton>button {{
+        background:{PRIMARY} !important;
+        color:white !important;
+        border:none !important;
+        border-radius: 14px !important;
+        font-weight: 900 !important;
+        height: 44px !important;
+    }}
+
+    /* Skill chips */
+    .chip {{
+        display:inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 12px;
+        margin: 6px 6px 0 0;
+        border: 1px solid rgba(15,23,42,0.08);
+    }}
+    .chip-green {{ background:{GREEN_BG}; color:{GREEN_TXT}; }}
+    .chip-orange {{ background:{ORANGE_BG}; color:{ORANGE_TXT}; }}
+
+    /* Circle score */
+    .ring {{
+        width: 160px; height: 160px; border-radius: 999px;
+        display:flex; align-items:center; justify-content:center;
+        margin: 6px 0 8px;
+        background:
+            conic-gradient({PRIMARY} var(--p), rgba(15,23,42,0.10) 0);
+    }}
+    .ring-inner {{
+        width: 128px; height: 128px; border-radius: 999px;
         background: white;
-      }}
-
-      .smallmuted {{ color: {TEXT_MUTED}; font-size: 13px; }}
-
-      .btn-primary button {{
-        background: {PRIMARY} !important;
-        color: white !important;
-        border-radius: 14px !important;
-        border: none !important;
-        font-weight: 800 !important;
-        height: 44px !important;
-      }}
-
-      .btn-ghost button {{
-        background: transparent !important;
-        color: {PRIMARY} !important;
-        border-radius: 14px !important;
-        border: 1px solid rgba(37,99,235,0.35) !important;
-        font-weight: 800 !important;
-        height: 44px !important;
-      }}
-
-      /* Make inputs look more “SaaS” */
-      textarea, input {{
-        border-radius: 14px !important;
-      }}
+        display:flex; align-items:center; justify-content:center;
+        flex-direction: column;
+        border: 1px solid rgba(15,23,42,0.08);
+    }}
+    .score {{ font-size: 38px; font-weight: 950; line-height: 1; }}
+    .score-sub {{ color:{MUTED}; font-weight: 700; font-size: 12px; margin-top: 4px; }}
 
     </style>
     """,
     unsafe_allow_html=True
 )
 
-# =========================
-# NLP / AI logic
-# =========================
+
+# ---------------- AI / NLP ----------------
 def extract_text(filename: str, file_bytes: bytes) -> str:
     name = filename.lower()
-
     if name.endswith(".pdf"):
         reader = PdfReader(BytesIO(file_bytes))
-        parts = []
-        for page in reader.pages:
-            parts.append(page.extract_text() or "")
-        return "\n".join(parts).strip()
-
+        return "\n".join([(p.extract_text() or "") for p in reader.pages]).strip()
     if name.endswith(".docx"):
         doc = Document(BytesIO(file_bytes))
         return "\n".join([p.text for p in doc.paragraphs if p.text]).strip()
-
     if name.endswith(".txt"):
         return file_bytes.decode("utf-8", errors="ignore").strip()
-
     raise ValueError("Upload PDF, DOCX, or TXT only.")
 
 
@@ -208,146 +194,114 @@ def find_skills(text: str) -> set:
     return found
 
 
-def skill_match_score(cv_text: str, jd_text: str) -> float:
-    cv_sk = find_skills(cv_text)
-    jd_sk = find_skills(jd_text)
-    if not jd_sk:
-        return 0.0
-    return (len(cv_sk & jd_sk) / len(jd_sk)) * 100.0
-
-
 def compute_all(cv_text: str, jd_text: str):
     sim = tfidf_similarity_score(cv_text, jd_text)
-    sk = skill_match_score(cv_text, jd_text)
-    final = sim if sk == 0.0 else (0.25 * sim + 0.75 * sk)
     cv_sk = find_skills(cv_text)
     jd_sk = find_skills(jd_text)
+    sk = 0.0 if not jd_sk else (len(cv_sk & jd_sk) / len(jd_sk)) * 100.0
+    final = sim if sk == 0.0 else (0.25 * sim + 0.75 * sk)
     matched = sorted(cv_sk & jd_sk)
     missing = sorted(jd_sk - cv_sk)
     return final, sim, sk, matched, missing
 
 
-# =========================
-# Navigation state
-# =========================
+# ---------------- NAV ----------------
 if "page" not in st.session_state:
     st.session_state.page = "Home"
 
-
-def go(page_name: str):
-    st.session_state.page = page_name
+def go(p):
+    st.session_state.page = p
     st.rerun()
 
-
-# =========================
-# Top navbar (Figma-like)
-# =========================
 st.markdown(
     """
-    <div class="navbar">
-      <div class="nav-inner">
-        <div class="brand">
-          <div class="logo">🧠</div>
-          <div>AI Match</div>
-        </div>
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="brand"><div class="logo">🧠</div>AI Match</div>
       </div>
     </div>
     """,
     unsafe_allow_html=True
 )
 
-# Buttons row (acts like navbar links)
-nav = st.columns([1,1,1,1,6])
-with nav[0]:
-    if st.button("Home", use_container_width=True):
-        go("Home")
-with nav[1]:
-    if st.button("Dashboard", use_container_width=True):
-        go("Dashboard")
-with nav[2]:
-    if st.button("About", use_container_width=True):
-        go("About")
-with nav[3]:
-    if st.button("Contact", use_container_width=True):
-        go("Contact")
+nav = st.columns([1, 1, 1, 1, 6])
+for i, (label, key) in enumerate([("Home","Home"),("Dashboard","Dashboard"),("About","About"),("Contact","Contact")]):
+    with nav[i]:
+        st.markdown('<div class="navbtns">', unsafe_allow_html=True)
+        if st.button(label, use_container_width=True):
+            go(key)
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
-# =========================
-# Pages
-# =========================
-def page_home():
-    st.markdown('<div class="container">', unsafe_allow_html=True)
-
-    c1, c2 = st.columns([1.2, 1])
+# ---------------- PAGES ----------------
+def home():
+    st.markdown('<div class="wrap">', unsafe_allow_html=True)
+    c1, c2 = st.columns([1.25, 1])
     with c1:
         st.markdown('<span class="pill">AI-Powered Recruitment</span>', unsafe_allow_html=True)
-        st.markdown('<div class="title">AI-Powered CV<br/>Screening & Job<br/>Matching</div>', unsafe_allow_html=True)
-        st.markdown(
-            '<div class="subtitle">Upload your CV and compare it instantly with job descriptions using NLP. Get match scores, missing skills, and recommendations in seconds.</div>',
-            unsafe_allow_html=True
-        )
-
-        b1, b2 = st.columns([1, 1])
+        st.markdown('<div class="hero-title">AI-Powered CV<br/>Screening & Job<br/>Matching</div>', unsafe_allow_html=True)
+        st.markdown('<div class="hero-sub">Upload your CV and compare it instantly with job descriptions using NLP. Get match scores, missing skills, and recommendations in seconds.</div>', unsafe_allow_html=True)
+        b1, b2 = st.columns(2)
         with b1:
-            st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
+            st.markdown('<div class="primary">', unsafe_allow_html=True)
             if st.button("Try Now →", use_container_width=True):
                 go("Dashboard")
             st.markdown('</div>', unsafe_allow_html=True)
         with b2:
-            st.markdown('<div class="btn-ghost">', unsafe_allow_html=True)
             if st.button("Learn More", use_container_width=True):
                 go("About")
-            st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown("<br/>", unsafe_allow_html=True)
-        st.markdown('<span class="pill">Free to use</span> <span class="pill">Instant results</span> <span class="pill">AI-powered</span>', unsafe_allow_html=True)
+        st.markdown('<span class="pill">Free to use</span><span class="pill">Instant results</span><span class="pill">AI-powered</span>', unsafe_allow_html=True)
 
     with c2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">Quick Preview</div>', unsafe_allow_html=True)
-        st.markdown('<div class="smallmuted">Example output</div>', unsafe_allow_html=True)
+        st.markdown("<b>Quick Preview</b><div class='smallmuted'>Example output</div>", unsafe_allow_html=True)
         st.markdown("<br/>", unsafe_allow_html=True)
         st.metric("Match Score", "87%")
-        st.markdown("<div class='smallmuted'>Analysis: ~2 seconds</div>", unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("<div class='smallmuted'>Analysis ~2 seconds</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<br/><br/>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align:center; font-weight:900;'>Why Choose AI Match?</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; color:rgba(0,0,0,0.65); margin-top:-6px;'>Streamline hiring with intelligent CV analysis and matching</p>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align:center; font-weight:950;'>Why Choose AI Match?</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; color:#475569; margin-top:-6px;'>Streamline hiring with intelligent CV analysis and matching</p>", unsafe_allow_html=True)
 
     f1, f2, f3, f4 = st.columns(4)
-    for col, title, desc in [
-        (f1, "AI-Powered Analysis", "Analyze CVs and job descriptions to find the best match."),
-        (f2, "Instant Results", "Get match scores and insights in seconds."),
-        (f3, "Accurate Matching", "Skill matching + similarity scoring for better decisions."),
-        (f4, "Secure & Private", "Your data stays private during analysis.")
-    ]:
+    feats = [
+        ("AI-Powered Analysis","Advanced algorithms analyze CVs and job descriptions."),
+        ("Instant Results","Get comprehensive results and insights in seconds."),
+        ("Accurate Matching","Skill match + similarity scoring for better decisions."),
+        ("Secure & Private","Your data is processed securely with privacy protection.")
+    ]
+    for col, (t, d) in zip([f1,f2,f3,f4], feats):
         with col:
-            st.markdown('<div class="feature">', unsafe_allow_html=True)
-            st.markdown(f"<b>{title}</b><br/><span class='smallmuted'>{desc}</span>", unsafe_allow_html=True)
+            st.markdown('<div class="card">', unsafe_allow_html=True)
+            st.markdown(f"<b>{t}</b><br/><span style='color:#475569; font-size:13px;'>{d}</span>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-def page_dashboard():
-    st.markdown('<div class="container">', unsafe_allow_html=True)
-    st.markdown("<h2 style='font-weight:900;'>CV Analysis Dashboard</h2>", unsafe_allow_html=True)
-    st.markdown("<p class='smallmuted'>Upload your CV and paste a job description to get instant AI-powered insights.</p>", unsafe_allow_html=True)
+def dashboard():
+    st.markdown('<div class="wrap">', unsafe_allow_html=True)
+    st.markdown("<h2 style='font-weight:950; margin-bottom:4px;'>CV Analysis Dashboard</h2>", unsafe_allow_html=True)
+    st.markdown("<div style='color:#475569; margin-bottom:16px;'>Upload your CV and paste a job description to get instant AI-powered insights.</div>", unsafe_allow_html=True)
 
     left, right = st.columns([1, 1])
 
     with left:
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown("<b>Upload CV</b>", unsafe_allow_html=True)
-        cv_file = st.file_uploader("PDF, DOC, or DOCX", type=["pdf", "docx", "txt"])
+        cv_file = st.file_uploader("PDF, DOCX, or TXT", type=["pdf", "docx", "txt"])
         st.markdown("<br/>", unsafe_allow_html=True)
         st.markdown("<b>Job Description</b>", unsafe_allow_html=True)
         jd = st.text_area("Paste the job description here...", height=220)
-        st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
+
+        st.markdown('<div class="primary">', unsafe_allow_html=True)
         run = st.button("✨ Analyze Match", use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
     with right:
         st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -359,60 +313,68 @@ def page_dashboard():
             elif not jd.strip():
                 st.error("Paste a job description first.")
             else:
-                try:
-                    cv_text = extract_text(cv_file.name, cv_file.read())
-                    final, sim, sk, matched, missing = compute_all(cv_text, jd)
+                cv_text = extract_text(cv_file.name, cv_file.read())
+                final, sim, sk, matched, missing = compute_all(cv_text, jd)
 
-                    st.metric("Match Score", f"{final:.0f}%")
-                    st.progress(min(100, max(0, int(final))) / 100)
+                p = max(0, min(100, int(final)))
+                st.markdown(
+                    f"""
+                    <div class="ring" style="--p:{p}%;">
+                      <div class="ring-inner">
+                        <div class="score">{p}%</div>
+                        <div class="score-sub">Good match</div>
+                      </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
-                    a, b = st.columns(2)
-                    with a:
-                        st.markdown("✅ **Matched Skills**")
-                        st.write(", ".join(matched) if matched else "None detected")
-                    with b:
-                        st.markdown("⚠️ **Missing Skills**")
-                        st.write(", ".join(missing) if missing else "None detected")
+                st.markdown("<div style='font-weight:900; margin-top:10px;'>Matched Skills</div>", unsafe_allow_html=True)
+                if matched:
+                    chips = "".join([f"<span class='chip chip-green'>{s}</span>" for s in matched])
+                    st.markdown(chips, unsafe_allow_html=True)
+                else:
+                    st.write("None detected")
 
-                    st.markdown("### AI Recommendations")
-                    if missing:
-                        for s in missing[:8]:
-                            st.write(f"- Consider adding/highlighting: {s}")
-                    else:
-                        st.write("Your CV aligns well with this job description.")
+                st.markdown("<div style='font-weight:900; margin-top:14px;'>Missing Skills</div>", unsafe_allow_html=True)
+                if missing:
+                    chips = "".join([f"<span class='chip chip-orange'>{s}</span>" for s in missing])
+                    st.markdown(chips, unsafe_allow_html=True)
+                else:
+                    st.write("None detected")
 
-                    with st.expander("Score breakdown"):
-                        st.write(f"TF-IDF Similarity: {sim:.1f}%")
-                        st.write(f"Skill Match: {sk:.1f}%")
-                        st.write("Final = 25% Similarity + 75% Skill Match")
+                st.markdown("<div style='font-weight:900; margin-top:18px;'>AI Recommendations</div>", unsafe_allow_html=True)
+                if missing:
+                    for s in missing[:8]:
+                        st.write(f"- Consider adding/highlighting: {s}")
+                else:
+                    st.write("Your CV aligns well with this job description.")
 
-                except Exception as e:
-                    st.error(f"Error: {e}")
+                with st.expander("Score breakdown"):
+                    st.write(f"TF-IDF Similarity: {sim:.1f}%")
+                    st.write(f"Skill Match: {sk:.1f}%")
+                    st.write("Final = 25% Similarity + 75% Skill Match")
         else:
-            st.info("Ready to analyze. Upload a CV, paste a job description, then click Analyze.")
+            st.info("Ready to analyze. Upload a CV and paste a job description, then click Analyze.")
 
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-def page_about():
-    st.markdown('<div class="container">', unsafe_allow_html=True)
-    st.markdown("<h2 style='font-weight:900;'>About</h2>", unsafe_allow_html=True)
+def about():
+    st.markdown('<div class="wrap">', unsafe_allow_html=True)
+    st.markdown("<h2 style='font-weight:950;'>About</h2>", unsafe_allow_html=True)
     st.markdown(
         f"""
         <div class="card">
-          <b>AI Match</b> is an AI-powered CV screening and job matching system.
-          It compares candidate CVs with job descriptions using NLP, then provides:
-          <br/><br/>
-          • Match Score (%)<br/>
-          • Matched & Missing Skills<br/>
-          • Recommendations to improve CV alignment<br/><br/>
-          <b>Methodology</b><br/>
-          • Text extraction (PDF/DOCX)<br/>
-          • TF-IDF vectorization + cosine similarity<br/>
-          • Skill gap analysis (keyword-based)<br/>
-          • Combined scoring for recruiter-friendly results
+        <b>AI Match</b> compares a candidate CV with a job description to produce a match score and skill gap analysis.
+        <br/><br/>
+        <b>Methods</b><br/>
+        • Text extraction (PDF/DOCX)<br/>
+        • TF-IDF vectorization + Cosine similarity<br/>
+        • Keyword-based skill extraction<br/>
+        • Combined scoring (skills-weighted)
         </div>
         """,
         unsafe_allow_html=True
@@ -420,9 +382,9 @@ def page_about():
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-def page_contact():
-    st.markdown('<div class="container">', unsafe_allow_html=True)
-    st.markdown("<h2 style='font-weight:900;'>Get In Touch</h2>", unsafe_allow_html=True)
+def contact():
+    st.markdown('<div class="wrap">', unsafe_allow_html=True)
+    st.markdown("<h2 style='font-weight:950;'>Get In Touch</h2>", unsafe_allow_html=True)
     st.markdown(
         f"""
         <div class="card">
@@ -439,10 +401,10 @@ def page_contact():
 
 
 if st.session_state.page == "Home":
-    page_home()
+    home()
 elif st.session_state.page == "Dashboard":
-    page_dashboard()
+    dashboard()
 elif st.session_state.page == "About":
-    page_about()
+    about()
 else:
-    page_contact()
+    contact()
