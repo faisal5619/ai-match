@@ -9,9 +9,61 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 # -----------------------
-# TEXT EXTRACTION
+# CONFIG + SIMPLE STYLING
 # -----------------------
+st.set_page_config(page_title="AI Match", page_icon="🧠", layout="wide")
 
+PRIMARY = "#2563EB"   # blue
+BG = "#F7F8FA"        # light gray background
+CARD = "#FFFFFF"      # card background
+
+st.markdown(
+    f"""
+    <style>
+      .stApp {{ background: {BG}; }}
+      .card {{
+        background: {CARD};
+        padding: 18px 18px;
+        border-radius: 16px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+        border: 1px solid rgba(0,0,0,0.04);
+        margin-bottom: 14px;
+      }}
+      .title {{
+        font-size: 40px;
+        font-weight: 800;
+        margin-bottom: 6px;
+      }}
+      .subtitle {{
+        font-size: 16px;
+        color: rgba(0,0,0,0.65);
+        margin-bottom: 12px;
+      }}
+      .pill {{
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(37,99,235,0.10);
+        color: {PRIMARY};
+        font-weight: 600;
+        margin-right: 8px;
+        font-size: 12px;
+      }}
+      .btn-primary button {{
+        background: {PRIMARY} !important;
+        color: white !important;
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        border: none !important;
+      }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# -----------------------
+# NLP PIPELINE (WORKING AI)
+# -----------------------
 def extract_text(filename: str, file_bytes: bytes) -> str:
     name = filename.lower()
 
@@ -32,10 +84,6 @@ def extract_text(filename: str, file_bytes: bytes) -> str:
     raise ValueError("Upload PDF, DOCX, or TXT only.")
 
 
-# -----------------------
-# CLEANING
-# -----------------------
-
 def clean_text(t: str) -> str:
     t = t.lower()
     t = re.sub(r"http\S+|www\S+", " ", t)
@@ -43,10 +91,6 @@ def clean_text(t: str) -> str:
     t = re.sub(r"\s+", " ", t).strip()
     return t
 
-
-# -----------------------
-# SIMILARITY SCORE (TF-IDF)
-# -----------------------
 
 def tfidf_similarity_score(cv_text: str, jd_text: str) -> float:
     cv = clean_text(cv_text)
@@ -58,39 +102,18 @@ def tfidf_similarity_score(cv_text: str, jd_text: str) -> float:
     vec = TfidfVectorizer(ngram_range=(1, 2), stop_words="english")
     m = vec.fit_transform([cv, jd])
     sim = cosine_similarity(m[0:1], m[1:2])[0][0]
-
     return max(0.0, min(1.0, float(sim))) * 100.0
 
 
-# -----------------------
-# SKILL DETECTION
-# -----------------------
-
 SKILLS = {
-    # Programming
-    "java", "python", "c", "c++", "c#",
-    "javascript", "typescript", "html", "css",
-
-    # AI / Data
-    "ai", "artificial intelligence", "machine learning",
-    "deep learning", "nlp", "data analysis",
-
-    # Tools
-    "git", "linux", "docker", "aws", "azure",
-    "api", "rest", "rest api",
-
-    # Education / Domain
-    "computer science", "software", "programming",
-    "object oriented programming", "oop",
-    "data structures", "algorithms",
-
-    # Office
-    "microsoft office", "word", "excel", "powerpoint",
-
-    # Soft skills
-    "teamwork", "collaboration",
-    "problem solving", "time management",
-    "communication", "english", "arabic"
+    "java", "python", "sql", "git", "linux", "docker", "aws", "azure",
+    "api", "rest", "rest api", "html", "css", "javascript",
+    "ai", "artificial intelligence", "machine learning", "nlp", "data analysis",
+    "computer science", "programming",
+    "oop", "object oriented programming", "data structures", "algorithms",
+    "teamwork", "problem solving", "time management", "communication",
+    "word", "excel", "powerpoint", "microsoft office",
+    "english", "arabic",
 }
 
 
@@ -98,8 +121,7 @@ def find_skills(text: str) -> set:
     t = clean_text(text)
     found = set()
     for s in SKILLS:
-        pattern = r"\b" + re.escape(s) + r"\b"
-        if re.search(pattern, t):
+        if re.search(r"\b" + re.escape(s) + r"\b", t):
             found.add(s)
     return found
 
@@ -107,28 +129,17 @@ def find_skills(text: str) -> set:
 def skill_match_score(cv_text: str, jd_text: str) -> float:
     cv_sk = find_skills(cv_text)
     jd_sk = find_skills(jd_text)
-
     if not jd_sk:
         return 0.0
-
     return (len(cv_sk & jd_sk) / len(jd_sk)) * 100.0
 
 
-# -----------------------
-# FINAL SCORING (UPDATED WEIGHTS)
-# -----------------------
-
-def final_score(cv_text: str, jd_text: str):
+def compute_all(cv_text: str, jd_text: str):
     sim = tfidf_similarity_score(cv_text, jd_text)
     sk = skill_match_score(cv_text, jd_text)
 
-    # NEW WEIGHTS (more recruiter-friendly)
-    # 25% semantic similarity
-    # 75% skill matching
-    if sk == 0.0:
-        final = sim
-    else:
-        final = 0.25 * sim + 0.75 * sk
+    # recruiter-friendly weights
+    final = sim if sk == 0.0 else (0.25 * sim + 0.75 * sk)
 
     cv_sk = find_skills(cv_text)
     jd_sk = find_skills(jd_text)
@@ -139,53 +150,119 @@ def final_score(cv_text: str, jd_text: str):
 
 
 # -----------------------
-# STREAMLIT UI
+# PAGES (LIKE YOUR FIGMA)
 # -----------------------
+def page_home():
+    st.markdown('<div class="pill">AI-Powered</div><div class="pill">Instant Results</div><div class="pill">Skill Gap Analysis</div>', unsafe_allow_html=True)
 
-st.set_page_config(page_title="AI Match", page_icon="🧠", layout="wide")
+    st.markdown('<div class="title">AI-Powered CV Screening<br/> & Job Matching</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle">Upload your CV, paste a job description, and get a match score with missing skills — instantly.</div>', unsafe_allow_html=True)
 
-st.title("CV Analysis Dashboard")
-st.caption("Upload your CV and paste a job description to get instant matching results.")
+    c1, c2 = st.columns([1, 1])
+    with c1:
+        st.markdown('<div class="card"><b>What it does</b><br/><br/>• Calculates Match Score (%)<br/>• Extracts matched & missing skills<br/>• Gives recommendations to improve your CV</div>', unsafe_allow_html=True)
+    with c2:
+        st.markdown('<div class="card"><b>Who it’s for</b><br/><br/>• HR recruiters (fast screening)<br/>• Job seekers (CV improvement)<br/>• Universities (career support)</div>', unsafe_allow_html=True)
 
-left, right = st.columns([1, 1])
+    st.markdown("### Ready?")
+    st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
+    if st.button("Analyze Your CV →", use_container_width=True):
+        st.session_state.page = "Dashboard"
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-with left:
-    cv_file = st.file_uploader("Upload CV (PDF/DOCX/TXT)", type=["pdf", "docx", "txt"])
-    jd = st.text_area("Job Description", height=250)
-    run = st.button("✨ Analyze Match", use_container_width=True)
 
-with right:
-    st.subheader("Results")
+def page_dashboard():
+    st.markdown('<div class="title">CV Analysis Dashboard</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle">Upload your CV and compare it with a job description.</div>', unsafe_allow_html=True)
 
-    if run:
-        if not cv_file:
-            st.error("Upload a CV first.")
-        elif not jd.strip():
-            st.error("Paste a job description first.")
+    left, right = st.columns([1, 1])
+
+    with left:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.subheader("Inputs")
+        cv_file = st.file_uploader("Upload CV (PDF/DOCX/TXT)", type=["pdf", "docx", "txt"])
+        jd = st.text_area("Job Description", height=220)
+        st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
+        run = st.button("✨ Analyze Match", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with right:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.subheader("Results")
+
+        if run:
+            if not cv_file:
+                st.error("Upload a CV first.")
+            elif not jd.strip():
+                st.error("Paste a job description first.")
+            else:
+                try:
+                    cv_text = extract_text(cv_file.name, cv_file.read())
+                    final, sim, sk, matched, missing = compute_all(cv_text, jd)
+
+                    st.metric("Match Score", f"{final:.0f}%")
+                    st.progress(min(100, max(0, int(final))) / 100)
+
+                    colA, colB = st.columns(2)
+                    with colA:
+                        st.write("✅ Matched Skills")
+                        st.write(", ".join(matched) if matched else "None detected")
+                    with colB:
+                        st.write("⚠️ Missing Skills")
+                        st.write(", ".join(missing) if missing else "None detected")
+
+                    st.write("### Recommendations")
+                    if missing:
+                        for s in missing[:10]:
+                            st.write(f"- Add or highlight: {s}")
+                    else:
+                        st.write("Your CV aligns well with this job description.")
+
+                    with st.expander("Score breakdown"):
+                        st.write(f"TF-IDF Similarity: {sim:.1f}%")
+                        st.write(f"Skill Match: {sk:.1f}%")
+                        st.write("Final = 25% Similarity + 75% Skill Match")
+
+                except Exception as e:
+                    st.error(f"Error: {e}")
         else:
-            try:
-                cv_text = extract_text(cv_file.name, cv_file.read())
-                final, sim, sk, matched, missing = final_score(cv_text, jd)
+            st.info("Upload CV + paste JD, then click Analyze.")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-                st.metric("Match Score", f"{final:.0f}%")
 
-                with st.expander("Score Breakdown"):
-                    st.write(f"TF-IDF Similarity: **{sim:.1f}%**")
-                    st.write(f"Skill Match Score: **{sk:.1f}%**")
-                    st.write("Final = 25% Similarity + 75% Skill Match")
+def page_about():
+    st.markdown('<div class="title">About</div>', unsafe_allow_html=True)
+    st.markdown('<div class="card">This project is an AI-powered CV screening and job matching system. It compares CV text with job descriptions using NLP techniques, computes a match score, and identifies missing skills to help both recruiters and job seekers.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="card"><b>Method</b><br/><br/>• Text extraction (PDF/DOCX)<br/>• Text preprocessing<br/>• TF-IDF vectorization<br/>• Cosine similarity scoring<br/>• Skill gap analysis</div>', unsafe_allow_html=True)
 
-                st.write("✅ Matched Skills:", ", ".join(matched) if matched else "None detected")
-                st.write("⚠️ Missing Skills:", ", ".join(missing) if missing else "None detected")
 
-                st.write("### Recommendations")
-                if missing:
-                    st.write("If you truly have these, add them clearly to your CV:")
-                    for s in missing[:10]:
-                        st.write(f"- {s}")
-                else:
-                    st.write("Your CV aligns well with this job description.")
+def page_contact():
+    st.markdown('<div class="title">Contact</div>', unsafe_allow_html=True)
+    st.markdown('<div class="card"><b>Office</b><br/>Abha, Aseer Region<br/>Kingdom of Saudi Arabia</div>', unsafe_allow_html=True)
+    st.markdown('<div class="card"><b>Email</b><br/>alhuaithy90@gmail.com</div>', unsafe_allow_html=True)
 
-            except Exception as e:
-                st.error(f"Error: {e}")
-    else:
-        st.info("Ready to analyze. Upload a CV, paste a job description, then click Analyze.")
+
+# -----------------------
+# NAV (LIKE A WEBSITE)
+# -----------------------
+if "page" not in st.session_state:
+    st.session_state.page = "Home"
+
+st.sidebar.title("AI Match")
+choice = st.sidebar.radio(
+    "Navigation",
+    ["Home", "Dashboard", "About", "Contact"],
+    index=["Home", "Dashboard", "About", "Contact"].index(st.session_state.page),
+)
+st.session_state.page = choice
+
+if choice == "Home":
+    page_home()
+elif choice == "Dashboard":
+    page_dashboard()
+elif choice == "About":
+    page_about()
+else:
+    page_contact()
