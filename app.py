@@ -258,17 +258,52 @@ def go(p: str):
     st.rerun()
 
 
-# ---------------- NAVBAR (Figma-like) ----------------
-st.markdown(
-    """
-    <div class="nav">
-      <div class="nav-inner">
-        <div class="brand"><div class="logo">🧠</div>AI Match</div>
-      </div>
+# ---------------- NAVBAR (Clean Figma-style) ----------------
+
+st.markdown("""
+<div style="
+    position: sticky;
+    top: 0;
+    background: rgba(247,248,250,0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(15,23,42,0.08);
+    padding: 14px 0;
+    z-index: 999;
+">
+  <div style="
+      max-width:1120px;
+      margin:0 auto;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:0 10px;
+  ">
+    <div style="display:flex; align-items:center; gap:10px; font-weight:900;">
+      <div style="
+          width:34px;
+          height:34px;
+          background:#2563EB;
+          border-radius:10px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          color:white;
+          font-weight:900;
+      ">🧠</div>
+      AI Match
     </div>
-    """,
-    unsafe_allow_html=True
-)
+
+    <div style="display:flex; gap:28px; font-weight:800;">
+      <a href="/" style="text-decoration:none; color:#475569;">Home</a>
+      <a href="/?page=Dashboard" style="text-decoration:none; color:#475569;">Dashboard</a>
+      <a href="/?page=About" style="text-decoration:none; color:#475569;">About</a>
+      <a href="/?page=Contact" style="text-decoration:none; color:#475569;">Contact</a>
+    </div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+
 
 # Links right side
 cL, cR = st.columns([2, 3])
