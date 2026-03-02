@@ -8,7 +8,7 @@ from docx import Document
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-
+st.markdown("# 🚀 VERSION 3 UI")
 st.set_page_config(page_title="AI Match", page_icon="🧠", layout="wide")
 
 PRIMARY = "#2563EB"
