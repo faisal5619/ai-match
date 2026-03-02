@@ -8,6 +8,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 
+# -----------------------
+# TEXT EXTRACTION
+# -----------------------
+
 def extract_text(filename: str, file_bytes: bytes) -> str:
     name = filename.lower()
 
@@ -28,6 +32,10 @@ def extract_text(filename: str, file_bytes: bytes) -> str:
     raise ValueError("Upload PDF, DOCX, or TXT only.")
 
 
+# -----------------------
+# CLEANING
+# -----------------------
+
 def clean_text(t: str) -> str:
     t = t.lower()
     t = re.sub(r"http\S+|www\S+", " ", t)
@@ -35,6 +43,10 @@ def clean_text(t: str) -> str:
     t = re.sub(r"\s+", " ", t).strip()
     return t
 
+
+# -----------------------
+# SIMILARITY SCORE (TF-IDF)
+# -----------------------
 
 def tfidf_similarity_score(cv_text: str, jd_text: str) -> float:
     cv = clean_text(cv_text)
@@ -46,31 +58,39 @@ def tfidf_similarity_score(cv_text: str, jd_text: str) -> float:
     vec = TfidfVectorizer(ngram_range=(1, 2), stop_words="english")
     m = vec.fit_transform([cv, jd])
     sim = cosine_similarity(m[0:1], m[1:2])[0][0]
+
     return max(0.0, min(1.0, float(sim))) * 100.0
 
 
-# Expanded skill list to better match real CV/JD wording
+# -----------------------
+# SKILL DETECTION
+# -----------------------
+
 SKILLS = {
-    # programming
+    # Programming
     "java", "python", "c", "c++", "c#",
     "javascript", "typescript", "html", "css",
 
-    # ai/data
-    "ai", "artificial intelligence", "machine learning", "deep learning", "nlp", "data analysis",
+    # AI / Data
+    "ai", "artificial intelligence", "machine learning",
+    "deep learning", "nlp", "data analysis",
 
-    # tools/platforms
+    # Tools
     "git", "linux", "docker", "aws", "azure",
     "api", "rest", "rest api",
 
-    # office
+    # Education / Domain
+    "computer science", "software", "programming",
+    "object oriented programming", "oop",
+    "data structures", "algorithms",
+
+    # Office
     "microsoft office", "word", "excel", "powerpoint",
 
-    # education / domain
-    "computer science", "software", "programming",
-
-    # soft skills
-    "teamwork", "collaboration", "problem solving", "time management", "communication",
-    "english", "arabic",
+    # Soft skills
+    "teamwork", "collaboration",
+    "problem solving", "time management",
+    "communication", "english", "arabic"
 }
 
 
@@ -94,16 +114,21 @@ def skill_match_score(cv_text: str, jd_text: str) -> float:
     return (len(cv_sk & jd_sk) / len(jd_sk)) * 100.0
 
 
-def final_score(cv_text: str, jd_text: str) -> tuple[float, float, float, list[str], list[str]]:
+# -----------------------
+# FINAL SCORING (UPDATED WEIGHTS)
+# -----------------------
+
+def final_score(cv_text: str, jd_text: str):
     sim = tfidf_similarity_score(cv_text, jd_text)
     sk = skill_match_score(cv_text, jd_text)
 
-    # If JD has no detectable skills, fallback to similarity only
+    # NEW WEIGHTS (more recruiter-friendly)
+    # 25% semantic similarity
+    # 75% skill matching
     if sk == 0.0:
         final = sim
     else:
-        # Weight skills more because TF-IDF is harsh on short CVs
-        final = 0.35 * sim + 0.65 * sk
+        final = 0.25 * sim + 0.75 * sk
 
     cv_sk = find_skills(cv_text)
     jd_sk = find_skills(jd_text)
@@ -113,7 +138,12 @@ def final_score(cv_text: str, jd_text: str) -> tuple[float, float, float, list[s
     return final, sim, sk, matched, missing
 
 
+# -----------------------
+# STREAMLIT UI
+# -----------------------
+
 st.set_page_config(page_title="AI Match", page_icon="🧠", layout="wide")
+
 st.title("CV Analysis Dashboard")
 st.caption("Upload your CV and paste a job description to get instant matching results.")
 
@@ -135,15 +165,14 @@ with right:
         else:
             try:
                 cv_text = extract_text(cv_file.name, cv_file.read())
-
                 final, sim, sk, matched, missing = final_score(cv_text, jd)
 
                 st.metric("Match Score", f"{final:.0f}%")
 
-                with st.expander("Score breakdown (for debugging)"):
+                with st.expander("Score Breakdown"):
                     st.write(f"TF-IDF Similarity: **{sim:.1f}%**")
-                    st.write(f"Skill Match: **{sk:.1f}%**")
-                    st.write("Final Score = 35% Similarity + 65% Skill Match (if skills found)")
+                    st.write(f"Skill Match Score: **{sk:.1f}%**")
+                    st.write("Final = 25% Similarity + 75% Skill Match")
 
                 st.write("✅ Matched Skills:", ", ".join(matched) if matched else "None detected")
                 st.write("⚠️ Missing Skills:", ", ".join(missing) if missing else "None detected")
@@ -154,7 +183,7 @@ with right:
                     for s in missing[:10]:
                         st.write(f"- {s}")
                 else:
-                    st.write("Your CV aligns well with this job description based on detected skills.")
+                    st.write("Your CV aligns well with this job description.")
 
             except Exception as e:
                 st.error(f"Error: {e}")
