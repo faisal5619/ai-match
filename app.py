@@ -15,117 +15,171 @@ BG = "#F7F8FA"
 CARD = "#FFFFFF"
 TEXT = "#0F172A"
 MUTED = "#475569"
+BORDER = "rgba(15,23,42,0.10)"
+SHADOW = "0 12px 30px rgba(2,6,23,0.06)"
+
 GREEN_BG = "#DCFCE7"
 GREEN_TXT = "#166534"
 ORANGE_BG = "#FFEDD5"
 ORANGE_TXT = "#9A3412"
 
 
-# --------- CSS (Figma-like layout + fixes) ----------
+# ---------- CSS ----------
 st.markdown(
     f"""
     <style>
-    [data-testid="stSidebar"] {{display:none;}}
-    header, footer, #MainMenu {{visibility:hidden;}}
+      [data-testid="stSidebar"] {{display:none;}}
+      header, footer, #MainMenu {{visibility:hidden;}}
 
-    .stApp {{ background: {BG}; color: {TEXT}; }}
+      .stApp {{ background: {BG}; color: {TEXT}; }}
 
-    .wrap {{ max-width: 1120px; margin: 0 auto; padding: 14px 10px 60px; }}
+      .wrap {{
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 10px 60px;
+      }}
 
-    .topbar {{
+      /* Navbar */
+      .nav {{
+        position: sticky;
+        top: 0;
+        z-index: 99;
         background: rgba(247,248,250,0.92);
         backdrop-filter: blur(10px);
         border-bottom: 1px solid rgba(15,23,42,0.08);
-        position: sticky; top: 0; z-index: 99;
-        padding: 14px 0;
-        margin-bottom: 18px;
-    }}
-    .topbar-inner {{
-        max-width: 1120px; margin: 0 auto; padding: 0 10px;
-        display:flex; align-items:center; justify-content:space-between;
-    }}
-    .brand {{ display:flex; align-items:center; gap:10px; font-weight:900; }}
-    .logo {{
-        width:34px; height:34px; border-radius:10px;
-        background:{PRIMARY}; color:white; display:flex; align-items:center; justify-content:center;
-        font-weight:900;
-    }}
+      }}
+      .nav-inner {{
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 14px 10px;
+        display:flex;
+        align-items:center;
+        justify-content: space-between;
+      }}
+      .brand {{
+        display:flex;
+        align-items:center;
+        gap: 10px;
+        font-weight: 950;
+      }}
+      .logo {{
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: {PRIMARY};
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        color: white;
+        font-weight: 950;
+      }}
 
-    .navbtns .stButton>button {{
-        border-radius: 12px !important;
-        height: 40px !important;
-        font-weight: 800 !important;
-        border: 1px solid rgba(37,99,235,0.25) !important;
-        background: white !important;
+      /* Make nav buttons look like links */
+      .navlinks .stButton>button {{
+        background: transparent !important;
+        border: none !important;
+        color: {MUTED} !important;
+        font-weight: 850 !important;
+        padding: 8px 10px !important;
+        border-radius: 10px !important;
+        height: auto !important;
+      }}
+      .navlinks .stButton>button:hover {{
+        background: rgba(37,99,235,0.08) !important;
         color: {PRIMARY} !important;
-    }}
+      }}
+      .active .stButton>button {{
+        background: rgba(37,99,235,0.12) !important;
+        color: {PRIMARY} !important;
+      }}
 
-    .hero-title {{ font-size: 46px; font-weight: 950; line-height:1.05; margin: 8px 0; }}
-    .hero-sub {{ color: {MUTED}; font-size: 15px; max-width: 640px; }}
-
-    .card {{
-        background:{CARD};
-        border: 1px solid rgba(15,23,42,0.08);
+      /* Common UI */
+      .card {{
+        background: {CARD};
+        border: 1px solid {BORDER};
         border-radius: 18px;
-        box-shadow: 0 10px 30px rgba(2,6,23,0.06);
+        box-shadow: {SHADOW};
         padding: 18px;
-    }}
+      }}
 
-    .pill {{
+      .title {{
+        font-size: 40px;
+        font-weight: 950;
+        margin: 4px 0 6px;
+        line-height: 1.08;
+      }}
+      .subtitle {{
+        color: {MUTED};
+        font-size: 15px;
+        margin-bottom: 14px;
+        max-width: 760px;
+      }}
+
+      .pill {{
         display:inline-block;
         padding: 6px 10px;
         border-radius: 999px;
         background: rgba(37,99,235,0.10);
         color: {PRIMARY};
-        font-weight: 800;
+        font-weight: 850;
         font-size: 12px;
         margin-right: 8px;
-    }}
+      }}
 
-    textarea {{
+      /* Inputs */
+      textarea {{
         color: {TEXT} !important;
         background: #FFFFFF !important;
         border-radius: 14px !important;
-        border: 1px solid rgba(15,23,42,0.10) !important;
-    }}
+        border: 1px solid {BORDER} !important;
+      }}
 
-    .primary .stButton>button {{
+      /* Primary button */
+      .primary .stButton>button {{
         background:{PRIMARY} !important;
         color:white !important;
         border:none !important;
         border-radius: 14px !important;
-        font-weight: 900 !important;
+        font-weight: 950 !important;
         height: 44px !important;
-    }}
+      }}
 
-    .chip {{
+      /* Chips */
+      .chip {{
         display:inline-block;
         padding: 6px 10px;
         border-radius: 999px;
-        font-weight: 800;
+        font-weight: 850;
         font-size: 12px;
         margin: 6px 6px 0 0;
         border: 1px solid rgba(15,23,42,0.08);
-    }}
-    .chip-green {{ background:{GREEN_BG}; color:{GREEN_TXT}; }}
-    .chip-orange {{ background:{ORANGE_BG}; color:{ORANGE_TXT}; }}
+      }}
+      .chip-green {{ background:{GREEN_BG}; color:{GREEN_TXT}; }}
+      .chip-orange {{ background:{ORANGE_BG}; color:{ORANGE_TXT}; }}
 
-    .ring {{
-        width: 160px; height: 160px; border-radius: 999px;
+      /* Score ring */
+      .ring {{
+        width: 150px; height: 150px; border-radius: 999px;
         display:flex; align-items:center; justify-content:center;
-        margin: 6px 0 8px;
-        background:
-            conic-gradient({PRIMARY} var(--p), rgba(15,23,42,0.10) 0);
-    }}
-    .ring-inner {{
-        width: 128px; height: 128px; border-radius: 999px;
+        margin: 4px 0 10px;
+        background: conic-gradient({PRIMARY} var(--p), rgba(15,23,42,0.10) 0);
+      }}
+      .ring-inner {{
+        width: 118px; height: 118px; border-radius: 999px;
         background: white;
         display:flex; align-items:center; justify-content:center;
         flex-direction: column;
         border: 1px solid rgba(15,23,42,0.08);
-    }}
-    .score {{ font-size: 38px; font-weight: 950; line-height: 1; }}
-    .score-sub {{ color:{MUTED}; font-weight: 800; font-size: 12px; margin-top: 4px; }}
+      }}
+      .score {{ font-size: 36px; font-weight: 950; line-height: 1; }}
+      .score-sub {{ color:{MUTED}; font-weight: 850; font-size: 12px; margin-top: 4px; }}
+
+      /* Section headings */
+      .h {{
+        font-weight: 950;
+        margin-top: 12px;
+        margin-bottom: 6px;
+      }}
     </style>
     """,
     unsafe_allow_html=True
@@ -194,18 +248,20 @@ def compute_all(cv_text: str, jd_text: str):
     return final, sim, sk, matched, missing
 
 
-# ---------------- NAV ----------------
+# ---------------- NAV STATE ----------------
 if "page" not in st.session_state:
     st.session_state.page = "Home"
 
-def go(p):
+def go(p: str):
     st.session_state.page = p
     st.rerun()
 
+
+# ---------------- NAVBAR (Figma-like) ----------------
 st.markdown(
     """
-    <div class="topbar">
-      <div class="topbar-inner">
+    <div class="nav">
+      <div class="nav-inner">
         <div class="brand"><div class="logo">🧠</div>AI Match</div>
       </div>
     </div>
@@ -213,23 +269,33 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-nav = st.columns([1, 1, 1, 1, 6])
-for i, (label, key) in enumerate([("Home","Home"),("Dashboard","Dashboard"),("About","About"),("Contact","Contact")]):
-    with nav[i]:
-        st.markdown('<div class="navbtns">', unsafe_allow_html=True)
-        if st.button(label, use_container_width=True):
-            go(key)
-        st.markdown('</div>', unsafe_allow_html=True)
+# Links right side
+cL, cR = st.columns([2, 3])
+with cR:
+    cols = st.columns([1, 1, 1, 1])
+    pages = [("Home","Home"),("Dashboard","Dashboard"),("About","About"),("Contact","Contact")]
+    for (col, (label, key)) in zip(cols, pages):
+        with col:
+            cls = "active" if st.session_state.page == key else "navlinks"
+            st.markdown(f"<div class='{cls}'>", unsafe_allow_html=True)
+            if st.button(label, use_container_width=True):
+                go(key)
+            st.markdown("</div>", unsafe_allow_html=True)
 
 
 # ---------------- PAGES ----------------
-def home():
+def page_home():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
-    c1, c2 = st.columns([1.25, 1])
-    with c1:
+
+    left, right = st.columns([1.25, 1])
+    with left:
         st.markdown('<span class="pill">AI-Powered Recruitment</span>', unsafe_allow_html=True)
-        st.markdown('<div class="hero-title">AI-Powered CV<br/>Screening & Job<br/>Matching</div>', unsafe_allow_html=True)
-        st.markdown('<div class="hero-sub">Upload your CV and compare it instantly with job descriptions using NLP. Get match scores, missing skills, and recommendations in seconds.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="title">AI-Powered CV<br/>Screening & Job<br/>Matching</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="subtitle">Upload your CV and compare it instantly with job descriptions using NLP. Get match scores, missing skills, and recommendations in seconds.</div>',
+            unsafe_allow_html=True
+        )
+
         b1, b2 = st.columns(2)
         with b1:
             st.markdown('<div class="primary">', unsafe_allow_html=True)
@@ -243,7 +309,7 @@ def home():
         st.markdown("<br/>", unsafe_allow_html=True)
         st.markdown('<span class="pill">Free to use</span><span class="pill">Instant results</span><span class="pill">AI-powered</span>', unsafe_allow_html=True)
 
-    with c2:
+    with right:
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown("<b>Quick Preview</b><br/><span style='color:#475569; font-size:13px;'>Example output</span>", unsafe_allow_html=True)
         st.markdown("<br/>", unsafe_allow_html=True)
@@ -271,30 +337,29 @@ def home():
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-def dashboard():
+def page_dashboard():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
-    st.markdown("<h2 style='font-weight:950; margin-bottom:4px;'>CV Analysis Dashboard</h2>", unsafe_allow_html=True)
-    st.markdown("<div style='color:#475569; margin-bottom:16px;'>Upload your CV and paste a job description to get instant AI-powered insights.</div>", unsafe_allow_html=True)
+
+    st.markdown("<div class='title' style='font-size:34px;'>CV Analysis Dashboard</div>", unsafe_allow_html=True)
+    st.markdown("<div class='subtitle'>Upload your CV and paste a job description to get instant AI-powered insights.</div>", unsafe_allow_html=True)
 
     left, right = st.columns([1, 1])
 
     with left:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown("<b>Upload CV</b>", unsafe_allow_html=True)
+        st.markdown("<div class='h'>Upload CV</div>", unsafe_allow_html=True)
         cv_file = st.file_uploader("PDF, DOCX, or TXT", type=["pdf", "docx", "txt"])
-        st.markdown("<br/>", unsafe_allow_html=True)
-        st.markdown("<b>Job Description</b>", unsafe_allow_html=True)
-        jd = st.text_area("Paste the job description here...", height=220)
+        st.markdown("<div class='h'>Job Description</div>", unsafe_allow_html=True)
+        jd = st.text_area("Paste the job description here...", height=240)
 
         st.markdown('<div class="primary">', unsafe_allow_html=True)
         run = st.button("✨ Analyze Match", use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
-
         st.markdown("</div>", unsafe_allow_html=True)
 
     with right:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown("<b>Results</b>", unsafe_allow_html=True)
+        st.markdown("<div class='h'>Results</div>", unsafe_allow_html=True)
 
         if run:
             if not cv_file:
@@ -318,21 +383,19 @@ def dashboard():
                     unsafe_allow_html=True
                 )
 
-                st.markdown("<div style='font-weight:900; margin-top:10px;'>Matched Skills</div>", unsafe_allow_html=True)
+                st.markdown("<div class='h'>Matched Skills</div>", unsafe_allow_html=True)
                 if matched:
-                    chips = "".join([f"<span class='chip chip-green'>{s}</span>" for s in matched])
-                    st.markdown(chips, unsafe_allow_html=True)
+                    st.markdown("".join([f"<span class='chip chip-green'>{s}</span>" for s in matched]), unsafe_allow_html=True)
                 else:
                     st.write("None detected")
 
-                st.markdown("<div style='font-weight:900; margin-top:14px;'>Missing Skills</div>", unsafe_allow_html=True)
+                st.markdown("<div class='h'>Missing Skills</div>", unsafe_allow_html=True)
                 if missing:
-                    chips = "".join([f"<span class='chip chip-orange'>{s}</span>" for s in missing])
-                    st.markdown(chips, unsafe_allow_html=True)
+                    st.markdown("".join([f"<span class='chip chip-orange'>{s}</span>" for s in missing]), unsafe_allow_html=True)
                 else:
                     st.write("None detected")
 
-                st.markdown("<div style='font-weight:900; margin-top:18px;'>AI Recommendations</div>", unsafe_allow_html=True)
+                st.markdown("<div class='h'>AI Recommendations</div>", unsafe_allow_html=True)
                 if missing:
                     for s in missing[:8]:
                         st.write(f"- Consider adding/highlighting: {s}")
@@ -351,9 +414,9 @@ def dashboard():
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-def about():
+def page_about():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
-    st.markdown("<h2 style='font-weight:950;'>About</h2>", unsafe_allow_html=True)
+    st.markdown("<div class='title' style='font-size:34px;'>About</div>", unsafe_allow_html=True)
     st.markdown(
         f"""
         <div class="card">
@@ -371,29 +434,39 @@ def about():
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-def contact():
+def page_contact():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
-    st.markdown("<h2 style='font-weight:950;'>Get In Touch</h2>", unsafe_allow_html=True)
-    st.markdown(
-        f"""
-        <div class="card">
-          <b>Office</b><br/>
-          Abha, Aseer Region<br/>
-          Kingdom of Saudi Arabia<br/><br/>
-          <b>Email</b><br/>
-          support@aimatch.com
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown("<div class='title' style='font-size:34px;'>Get In Touch</div>", unsafe_allow_html=True)
+
+    c1, c2 = st.columns([1, 1.3])
+    with c1:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.markdown("<b>Email</b><br/>support@aimatch.com", unsafe_allow_html=True)
+        st.markdown("<br/><b>Phone</b><br/>+966 XX XXX XXXX", unsafe_allow_html=True)
+        st.markdown("<br/><b>Office</b><br/>Abha, Aseer<br/>Kingdom of Saudi Arabia", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with c2:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.markdown("<b>Send us a message</b>", unsafe_allow_html=True)
+        name = st.text_input("Name")
+        email = st.text_input("Email")
+        subject = st.text_input("Subject")
+        msg = st.text_area("Message", height=160)
+        st.markdown('<div class="primary">', unsafe_allow_html=True)
+        st.button("Send Message", use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        st.caption("Demo UI only (no email sending yet).")
+        st.markdown("</div>", unsafe_allow_html=True)
+
     st.markdown("</div>", unsafe_allow_html=True)
 
 
 if st.session_state.page == "Home":
-    home()
+    page_home()
 elif st.session_state.page == "Dashboard":
-    dashboard()
+    page_dashboard()
 elif st.session_state.page == "About":
-    about()
+    page_about()
 else:
-    contact()
+    page_contact()
