@@ -1,6 +1,5 @@
 import re
 from io import BytesIO
-import streamlit.components.v1 as components
 
 import streamlit as st
 from PyPDF2 import PdfReader
@@ -41,6 +40,60 @@ st.markdown(
         max-width: 1120px;
         margin: 0 auto;
         padding: 0 10px 60px;
+      }}
+
+      /* Navbar */
+      .nav {{
+        position: sticky;
+        top: 0;
+        z-index: 999;
+        background: rgba(247,248,250,0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(15,23,42,0.08);
+      }}
+      .nav-inner {{
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 14px 10px;
+        display:flex;
+        align-items:center;
+        justify-content: space-between;
+      }}
+      .brand {{
+        display:flex;
+        align-items:center;
+        gap: 10px;
+        font-weight: 950;
+      }}
+      .logo {{
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: {PRIMARY};
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        color: white;
+        font-weight: 950;
+      }}
+
+      /* Make nav buttons look like links */
+      .navlinks .stButton>button {{
+        background: transparent !important;
+        border: none !important;
+        color: {MUTED} !important;
+        font-weight: 850 !important;
+        padding: 8px 10px !important;
+        border-radius: 10px !important;
+        height: auto !important;
+      }}
+      .navlinks .stButton>button:hover {{
+        background: rgba(37,99,235,0.08) !important;
+        color: {PRIMARY} !important;
+      }}
+      .active .stButton>button {{
+        background: rgba(37,99,235,0.12) !important;
+        color: {PRIMARY} !important;
       }}
 
       /* Cards */
@@ -87,11 +140,6 @@ st.markdown(
         color: {TEXT} !important;
       }}
 
-      /* Fix Streamlit label/input colors in some browsers */
-      label, p, span, div {{
-        color: inherit;
-      }}
-
       /* Primary button */
       .primary .stButton>button {{
         background:{PRIMARY} !important;
@@ -132,16 +180,10 @@ st.markdown(
       .score {{ font-size: 36px; font-weight: 950; line-height: 1; }}
       .score-sub {{ color:{MUTED}; font-weight: 850; font-size: 12px; margin-top: 4px; }}
 
-      /* Section headings */
       .h {{
         font-weight: 950;
         margin-top: 12px;
         margin-bottom: 6px;
-      }}
-
-      /* Remove extra top padding Streamlit sometimes adds */
-      .block-container {{
-        padding-top: 0.5rem !important;
       }}
     </style>
     """,
@@ -191,7 +233,6 @@ SKILLS = {
     "teamwork","collaboration","problem solving","time management","communication","english","arabic"
 }
 
-
 def find_skills(text: str) -> set:
     t = clean_text(text)
     found = set()
@@ -218,58 +259,48 @@ PAGES = ["Home", "Dashboard", "About", "Contact"]
 if "page" not in st.session_state:
     st.session_state.page = "Home"
 
+# If URL has ?page=... use it, otherwise keep session_state (so uploads don't kick you back Home)
 qp = st.query_params.get("page")
-if isinstance(qp, list):
-    qp = qp[0]
 if qp in PAGES:
     st.session_state.page = qp
 
-
 def set_page(p: str):
     st.session_state.page = p
-    st.query_params["page"] = p
+    st.query_params["page"] = p   # keep URL in sync (important!)
     st.rerun()
 
 
-# ---------------- NAVBAR (FORCED HTML, WON'T PRINT AS TEXT) ----------------
-components.html(
+# ---------------- NAVBAR UI ----------------
+st.markdown('<div class="nav"><div class="nav-inner">', unsafe_allow_html=True)
+st.markdown(
     f"""
-    <div style="
-      position: sticky; top: 0; z-index: 999;
-      background: rgba(247,248,250,0.95);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(15,23,42,0.08);
-      padding: 14px 0;
-    ">
-      <div style="
-        max-width: 1120px;
-        margin: 0 auto;
-        padding: 0 10px;
-        display:flex;
-        align-items:center;
-        justify-content: space-between;
-      ">
-        <div style="display:flex; align-items:center; gap:10px; font-weight:950;">
-          <div style="
-            width:34px; height:34px; border-radius:10px; background:{PRIMARY};
-            display:flex; align-items:center; justify-content:center;
-            color:white; font-weight:950;
-          ">🧠</div>
-          <div style="color:{TEXT}; font-size:16px;">AI Match</div>
-        </div>
-
-        <div style="display:flex; gap:14px; align-items:center;">
-          <a href="/?page=Home" style="text-decoration:none; color:{MUTED}; font-weight:850; padding:8px 10px; border-radius:10px;">Home</a>
-          <a href="/?page=Dashboard" style="text-decoration:none; color:{MUTED}; font-weight:850; padding:8px 10px; border-radius:10px;">Dashboard</a>
-          <a href="/?page=About" style="text-decoration:none; color:{MUTED}; font-weight:850; padding:8px 10px; border-radius:10px;">About</a>
-          <a href="/?page=Contact" style="text-decoration:none; color:{MUTED}; font-weight:850; padding:8px 10px; border-radius:10px;">Contact</a>
-        </div>
-      </div>
+    <div class="brand">
+      <div class="logo">🧠</div>
+      <div>AI Match</div>
     </div>
     """,
-    height=80,
-    scrolling=False,
+    unsafe_allow_html=True
 )
+
+nav1, nav2, nav3, nav4 = st.columns([1, 1, 1, 1], vertical_alignment="center")
+st.markdown("</div></div>", unsafe_allow_html=True)
+
+# Buttons row under navbar (stable + doesn’t break on reruns)
+st.markdown('<div class="wrap"><div class="navlinks">', unsafe_allow_html=True)
+b1, b2, b3, b4 = st.columns([1, 1, 1, 1])
+
+def nav_btn(label, target):
+    cls = "active" if st.session_state.page == target else ""
+    st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
+    if st.button(label, use_container_width=True, key=f"nav_{target}"):
+        set_page(target)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+with b1: nav_btn("Home", "Home")
+with b2: nav_btn("Dashboard", "Dashboard")
+with b3: nav_btn("About", "About")
+with b4: nav_btn("Contact", "Contact")
+st.markdown("</div></div>", unsafe_allow_html=True)
 
 
 # ---------------- PAGES ----------------
@@ -331,10 +362,10 @@ def page_home():
 
 def page_dashboard():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
-
     st.markdown("<div class='title' style='font-size:34px;'>CV Analysis Dashboard</div>", unsafe_allow_html=True)
     st.markdown("<div class='subtitle'>Upload your CV and paste a job description to get instant AI-powered insights.</div>", unsafe_allow_html=True)
 
+    # Persist input across reruns (THIS is another reason things “reset”)
     if "jd_text" not in st.session_state:
         st.session_state.jd_text = ""
     if "cv_name" not in st.session_state:
