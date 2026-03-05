@@ -1,5 +1,6 @@
 import re
 from io import BytesIO
+import streamlit.components.v1 as components
 
 import streamlit as st
 from PyPDF2 import PdfReader
@@ -40,62 +41,6 @@ st.markdown(
         max-width: 1120px;
         margin: 0 auto;
         padding: 0 10px 60px;
-      }}
-
-      /* Navbar (pure HTML, no Streamlit elements inside) */
-      .nav {{
-        position: sticky;
-        top: 0;
-        z-index: 9999;
-        background: rgba(247,248,250,0.95);
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid rgba(15,23,42,0.08);
-      }}
-      .nav-inner {{
-        max-width: 1120px;
-        margin: 0 auto;
-        padding: 14px 10px;
-        display:flex;
-        align-items:center;
-        justify-content: space-between;
-        gap: 16px;
-      }}
-      .brand {{
-        display:flex;
-        align-items:center;
-        gap: 10px;
-        font-weight: 950;
-      }}
-      .logo {{
-        width: 34px;
-        height: 34px;
-        border-radius: 10px;
-        background: {PRIMARY};
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        color: white;
-        font-weight: 950;
-      }}
-      .navlinks {{
-        display:flex;
-        gap: 14px;
-        align-items:center;
-        font-weight: 850;
-      }}
-      .navlinks a {{
-        text-decoration:none;
-        color: {MUTED};
-        padding: 8px 10px;
-        border-radius: 10px;
-      }}
-      .navlinks a:hover {{
-        background: rgba(37,99,235,0.08);
-        color: {PRIMARY};
-      }}
-      .navlinks a.active {{
-        background: rgba(37,99,235,0.12);
-        color: {PRIMARY};
       }}
 
       /* Cards */
@@ -142,6 +87,11 @@ st.markdown(
         color: {TEXT} !important;
       }}
 
+      /* Fix Streamlit label/input colors in some browsers */
+      label, p, span, div {{
+        color: inherit;
+      }}
+
       /* Primary button */
       .primary .stButton>button {{
         background:{PRIMARY} !important;
@@ -182,15 +132,16 @@ st.markdown(
       .score {{ font-size: 36px; font-weight: 950; line-height: 1; }}
       .score-sub {{ color:{MUTED}; font-weight: 850; font-size: 12px; margin-top: 4px; }}
 
+      /* Section headings */
       .h {{
         font-weight: 950;
         margin-top: 12px;
         margin-bottom: 6px;
       }}
 
-      /* Reduce top padding */
+      /* Remove extra top padding Streamlit sometimes adds */
       .block-container {{
-        padding-top: 0.7rem !important;
+        padding-top: 0.5rem !important;
       }}
     </style>
     """,
@@ -240,6 +191,7 @@ SKILLS = {
     "teamwork","collaboration","problem solving","time management","communication","english","arabic"
 }
 
+
 def find_skills(text: str) -> set:
     t = clean_text(text)
     found = set()
@@ -260,7 +212,7 @@ def compute_all(cv_text: str, jd_text: str):
     return final, sim, sk, matched, missing
 
 
-# ---------------- ROUTING ----------------
+# ---------------- NAV (THIS FIXES YOUR PROBLEM) ----------------
 PAGES = ["Home", "Dashboard", "About", "Contact"]
 
 if "page" not in st.session_state:
@@ -272,34 +224,51 @@ if isinstance(qp, list):
 if qp in PAGES:
     st.session_state.page = qp
 
+
 def set_page(p: str):
     st.session_state.page = p
     st.query_params["page"] = p
     st.rerun()
 
 
-# ---------------- NAVBAR (HTML ONLY, NO WEIRD EMBED) ----------------
-active = st.session_state.page
-
-st.markdown(
+# ---------------- NAVBAR (FORCED HTML, WON'T PRINT AS TEXT) ----------------
+components.html(
     f"""
-    <div class="nav">
-      <div class="nav-inner">
-        <div class="brand">
-          <div class="logo">🧠</div>
-          <div>AI Match</div>
+    <div style="
+      position: sticky; top: 0; z-index: 999;
+      background: rgba(247,248,250,0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(15,23,42,0.08);
+      padding: 14px 0;
+    ">
+      <div style="
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 10px;
+        display:flex;
+        align-items:center;
+        justify-content: space-between;
+      ">
+        <div style="display:flex; align-items:center; gap:10px; font-weight:950;">
+          <div style="
+            width:34px; height:34px; border-radius:10px; background:{PRIMARY};
+            display:flex; align-items:center; justify-content:center;
+            color:white; font-weight:950;
+          ">🧠</div>
+          <div style="color:{TEXT}; font-size:16px;">AI Match</div>
         </div>
 
-        <div class="navlinks">
-          <a class="{ 'active' if active=='Home' else '' }" href="/?page=Home">Home</a>
-          <a class="{ 'active' if active=='Dashboard' else '' }" href="/?page=Dashboard">Dashboard</a>
-          <a class="{ 'active' if active=='About' else '' }" href="/?page=About">About</a>
-          <a class="{ 'active' if active=='Contact' else '' }" href="/?page=Contact">Contact</a>
+        <div style="display:flex; gap:14px; align-items:center;">
+          <a href="/?page=Home" style="text-decoration:none; color:{MUTED}; font-weight:850; padding:8px 10px; border-radius:10px;">Home</a>
+          <a href="/?page=Dashboard" style="text-decoration:none; color:{MUTED}; font-weight:850; padding:8px 10px; border-radius:10px;">Dashboard</a>
+          <a href="/?page=About" style="text-decoration:none; color:{MUTED}; font-weight:850; padding:8px 10px; border-radius:10px;">About</a>
+          <a href="/?page=Contact" style="text-decoration:none; color:{MUTED}; font-weight:850; padding:8px 10px; border-radius:10px;">Contact</a>
         </div>
       </div>
     </div>
     """,
-    unsafe_allow_html=True
+    height=80,
+    scrolling=False,
 )
 
 
@@ -362,6 +331,7 @@ def page_home():
 
 def page_dashboard():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
+
     st.markdown("<div class='title' style='font-size:34px;'>CV Analysis Dashboard</div>", unsafe_allow_html=True)
     st.markdown("<div class='subtitle'>Upload your CV and paste a job description to get instant AI-powered insights.</div>", unsafe_allow_html=True)
 
