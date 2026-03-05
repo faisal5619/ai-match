@@ -77,23 +77,17 @@ st.markdown(
         font-weight: 950;
       }}
 
-      /* Make nav buttons look like links */
-      .navlinks .stButton>button {{
-        background: transparent !important;
-        border: none !important;
-        color: {MUTED} !important;
-        font-weight: 850 !important;
-        padding: 8px 10px !important;
-        border-radius: 10px !important;
-        height: auto !important;
+      .navlinks a {{
+        text-decoration: none;
+        color: {MUTED};
+        font-weight: 850;
+        font-size: 14px;
+        padding: 8px 10px;
+        border-radius: 10px;
       }}
-      .navlinks .stButton>button:hover {{
-        background: rgba(37,99,235,0.08) !important;
-        color: {PRIMARY} !important;
-      }}
-      .active .stButton>button {{
-        background: rgba(37,99,235,0.12) !important;
-        color: {PRIMARY} !important;
+      .navlinks a:hover {{
+        background: rgba(37,99,235,0.08);
+        color: {PRIMARY};
       }}
 
       /* Cards */
@@ -253,54 +247,38 @@ def compute_all(cv_text: str, jd_text: str):
     return final, sim, sk, matched, missing
 
 
-# ---------------- NAV (THIS FIXES YOUR PROBLEM) ----------------
+# ---------------- NAV (DOESN'T RESET TO HOME) ----------------
 PAGES = ["Home", "Dashboard", "About", "Contact"]
 
 if "page" not in st.session_state:
     st.session_state.page = "Home"
 
-# If URL has ?page=... use it, otherwise keep session_state (so uploads don't kick you back Home)
 qp = st.query_params.get("page")
 if qp in PAGES:
     st.session_state.page = qp
 
-def set_page(p: str):
-    st.session_state.page = p
-    st.query_params["page"] = p   # keep URL in sync (important!)
-    st.rerun()
 
-
-# ---------------- NAVBAR UI ----------------
-st.markdown('<div class="nav"><div class="nav-inner">', unsafe_allow_html=True)
+# ---------------- NAVBAR (FIGMA-LIKE LINKS) ----------------
 st.markdown(
     f"""
-    <div class="brand">
-      <div class="logo">🧠</div>
-      <div>AI Match</div>
+    <div class="nav">
+      <div class="nav-inner">
+        <div class="brand">
+          <div class="logo">🧠</div>
+          <div>AI Match</div>
+        </div>
+
+        <div class="navlinks" style="display:flex; gap:14px; align-items:center;">
+          <a href="/?page=Home">Home</a>
+          <a href="/?page=Dashboard">Dashboard</a>
+          <a href="/?page=About">About</a>
+          <a href="/?page=Contact">Contact</a>
+        </div>
+      </div>
     </div>
     """,
     unsafe_allow_html=True
 )
-
-nav1, nav2, nav3, nav4 = st.columns([1, 1, 1, 1], vertical_alignment="center")
-st.markdown("</div></div>", unsafe_allow_html=True)
-
-# Buttons row under navbar (stable + doesn’t break on reruns)
-st.markdown('<div class="wrap"><div class="navlinks">', unsafe_allow_html=True)
-b1, b2, b3, b4 = st.columns([1, 1, 1, 1])
-
-def nav_btn(label, target):
-    cls = "active" if st.session_state.page == target else ""
-    st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
-    if st.button(label, use_container_width=True, key=f"nav_{target}"):
-        set_page(target)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-with b1: nav_btn("Home", "Home")
-with b2: nav_btn("Dashboard", "Dashboard")
-with b3: nav_btn("About", "About")
-with b4: nav_btn("Contact", "Contact")
-st.markdown("</div></div>", unsafe_allow_html=True)
 
 
 # ---------------- PAGES ----------------
@@ -319,12 +297,10 @@ def page_home():
         c1, c2 = st.columns(2)
         with c1:
             st.markdown('<div class="primary">', unsafe_allow_html=True)
-            if st.button("Try Now →", use_container_width=True, key="home_try"):
-                set_page("Dashboard")
+            st.link_button("Try Now →", "/?page=Dashboard", use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
         with c2:
-            if st.button("Learn More", use_container_width=True, key="home_learn"):
-                set_page("About")
+            st.link_button("Learn More", "/?page=About", use_container_width=True)
 
         st.markdown("<br/>", unsafe_allow_html=True)
         st.markdown(
@@ -365,7 +341,7 @@ def page_dashboard():
     st.markdown("<div class='title' style='font-size:34px;'>CV Analysis Dashboard</div>", unsafe_allow_html=True)
     st.markdown("<div class='subtitle'>Upload your CV and paste a job description to get instant AI-powered insights.</div>", unsafe_allow_html=True)
 
-    # Persist input across reruns (THIS is another reason things “reset”)
+    # Persist input across reruns
     if "jd_text" not in st.session_state:
         st.session_state.jd_text = ""
     if "cv_name" not in st.session_state:
