@@ -1,8 +1,8 @@
 import re
 from io import BytesIO
+import streamlit.components.v1 as components
 
 import streamlit as st
-import streamlit.components.v1 as components
 from PyPDF2 import PdfReader
 from docx import Document
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -132,6 +132,7 @@ st.markdown(
       .score {{ font-size: 36px; font-weight: 950; line-height: 1; }}
       .score-sub {{ color:{MUTED}; font-weight: 850; font-size: 12px; margin-top: 4px; }}
 
+      /* Section headings */
       .h {{
         font-weight: 950;
         margin-top: 12px;
@@ -182,12 +183,12 @@ def tfidf_similarity_score(cv_text: str, jd_text: str) -> float:
 
 
 SKILLS = {
-    "java", "python", "sql", "git", "linux", "docker", "aws", "azure",
-    "api", "rest", "rest api", "html", "css", "javascript", "typescript", "react",
-    "ai", "artificial intelligence", "machine learning", "nlp", "data analysis",
-    "computer science", "programming", "oop", "object oriented programming", "data structures", "algorithms",
-    "microsoft office", "word", "excel", "powerpoint",
-    "teamwork", "collaboration", "problem solving", "time management", "communication", "english", "arabic"
+    "java","python","sql","git","linux","docker","aws","azure",
+    "api","rest","rest api","html","css","javascript","typescript","react",
+    "ai","artificial intelligence","machine learning","nlp","data analysis",
+    "computer science","programming","oop","object oriented programming","data structures","algorithms",
+    "microsoft office","word","excel","powerpoint",
+    "teamwork","collaboration","problem solving","time management","communication","english","arabic"
 }
 
 
@@ -211,7 +212,7 @@ def compute_all(cv_text: str, jd_text: str):
     return final, sim, sk, matched, missing
 
 
-# ---------------- NAV (stable) ----------------
+# ---------------- NAV (THIS FIXES YOUR PROBLEM) ----------------
 PAGES = ["Home", "Dashboard", "About", "Contact"]
 
 if "page" not in st.session_state:
@@ -230,7 +231,7 @@ def set_page(p: str):
     st.rerun()
 
 
-# ---------------- NAVBAR (FORCED HTML, NEVER PRINTS AS TEXT) ----------------
+# ---------------- NAVBAR (FORCED HTML, WON'T PRINT AS TEXT) ----------------
 components.html(
     f"""
     <div style="
@@ -314,10 +315,10 @@ def page_home():
 
     f1, f2, f3, f4 = st.columns(4)
     feats = [
-        ("AI-Powered Analysis", "Advanced algorithms analyze CVs and job descriptions."),
-        ("Instant Results", "Get comprehensive results and insights in seconds."),
-        ("Accurate Matching", "Skill match + similarity scoring for better decisions."),
-        ("Secure & Private", "Your data is processed securely with privacy protection.")
+        ("AI-Powered Analysis","Advanced algorithms analyze CVs and job descriptions."),
+        ("Instant Results","Get comprehensive results and insights in seconds."),
+        ("Accurate Matching","Skill match + similarity scoring for better decisions."),
+        ("Secure & Private","Your data is processed securely with privacy protection.")
     ]
     for col, (t, d) in zip([f1, f2, f3, f4], feats):
         with col:
@@ -330,10 +331,10 @@ def page_home():
 
 def page_dashboard():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
+
     st.markdown("<div class='title' style='font-size:34px;'>CV Analysis Dashboard</div>", unsafe_allow_html=True)
     st.markdown("<div class='subtitle'>Upload your CV and paste a job description to get instant AI-powered insights.</div>", unsafe_allow_html=True)
 
-    # Persist input across reruns
     if "jd_text" not in st.session_state:
         st.session_state.jd_text = ""
     if "cv_name" not in st.session_state:
