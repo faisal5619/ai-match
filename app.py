@@ -2,6 +2,7 @@ import re
 from io import BytesIO
 
 import streamlit as st
+import streamlit.components.v1 as components
 from PyPDF2 import PdfReader
 from docx import Document
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -40,54 +41,6 @@ st.markdown(
         max-width: 1120px;
         margin: 0 auto;
         padding: 0 10px 60px;
-      }}
-
-      /* Navbar */
-      .nav {{
-        position: sticky;
-        top: 0;
-        z-index: 999;
-        background: rgba(247,248,250,0.95);
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid rgba(15,23,42,0.08);
-      }}
-      .nav-inner {{
-        max-width: 1120px;
-        margin: 0 auto;
-        padding: 14px 10px;
-        display:flex;
-        align-items:center;
-        justify-content: space-between;
-      }}
-      .brand {{
-        display:flex;
-        align-items:center;
-        gap: 10px;
-        font-weight: 950;
-      }}
-      .logo {{
-        width: 34px;
-        height: 34px;
-        border-radius: 10px;
-        background: {PRIMARY};
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        color: white;
-        font-weight: 950;
-      }}
-
-      .navlinks a {{
-        text-decoration: none;
-        color: {MUTED};
-        font-weight: 850;
-        font-size: 14px;
-        padding: 8px 10px;
-        border-radius: 10px;
-      }}
-      .navlinks a:hover {{
-        background: rgba(37,99,235,0.08);
-        color: {PRIMARY};
       }}
 
       /* Cards */
@@ -132,6 +85,11 @@ st.markdown(
       }}
       input {{
         color: {TEXT} !important;
+      }}
+
+      /* Fix Streamlit label/input colors in some browsers */
+      label, p, span, div {{
+        color: inherit;
       }}
 
       /* Primary button */
@@ -179,6 +137,11 @@ st.markdown(
         margin-top: 12px;
         margin-bottom: 6px;
       }}
+
+      /* Remove extra top padding Streamlit sometimes adds */
+      .block-container {{
+        padding-top: 0.5rem !important;
+      }}
     </style>
     """,
     unsafe_allow_html=True
@@ -219,13 +182,14 @@ def tfidf_similarity_score(cv_text: str, jd_text: str) -> float:
 
 
 SKILLS = {
-    "java","python","sql","git","linux","docker","aws","azure",
-    "api","rest","rest api","html","css","javascript","typescript","react",
-    "ai","artificial intelligence","machine learning","nlp","data analysis",
-    "computer science","programming","oop","object oriented programming","data structures","algorithms",
-    "microsoft office","word","excel","powerpoint",
-    "teamwork","collaboration","problem solving","time management","communication","english","arabic"
+    "java", "python", "sql", "git", "linux", "docker", "aws", "azure",
+    "api", "rest", "rest api", "html", "css", "javascript", "typescript", "react",
+    "ai", "artificial intelligence", "machine learning", "nlp", "data analysis",
+    "computer science", "programming", "oop", "object oriented programming", "data structures", "algorithms",
+    "microsoft office", "word", "excel", "powerpoint",
+    "teamwork", "collaboration", "problem solving", "time management", "communication", "english", "arabic"
 }
+
 
 def find_skills(text: str) -> set:
     t = clean_text(text)
@@ -247,37 +211,63 @@ def compute_all(cv_text: str, jd_text: str):
     return final, sim, sk, matched, missing
 
 
-# ---------------- NAV (DOESN'T RESET TO HOME) ----------------
+# ---------------- NAV (stable) ----------------
 PAGES = ["Home", "Dashboard", "About", "Contact"]
 
 if "page" not in st.session_state:
     st.session_state.page = "Home"
 
 qp = st.query_params.get("page")
+if isinstance(qp, list):
+    qp = qp[0]
 if qp in PAGES:
     st.session_state.page = qp
 
 
-# ---------------- NAVBAR (FIGMA-LIKE LINKS) ----------------
-st.markdown(
+def set_page(p: str):
+    st.session_state.page = p
+    st.query_params["page"] = p
+    st.rerun()
+
+
+# ---------------- NAVBAR (FORCED HTML, NEVER PRINTS AS TEXT) ----------------
+components.html(
     f"""
-    <div class="nav">
-      <div class="nav-inner">
-        <div class="brand">
-          <div class="logo">🧠</div>
-          <div>AI Match</div>
+    <div style="
+      position: sticky; top: 0; z-index: 999;
+      background: rgba(247,248,250,0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(15,23,42,0.08);
+      padding: 14px 0;
+    ">
+      <div style="
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 10px;
+        display:flex;
+        align-items:center;
+        justify-content: space-between;
+      ">
+        <div style="display:flex; align-items:center; gap:10px; font-weight:950;">
+          <div style="
+            width:34px; height:34px; border-radius:10px; background:{PRIMARY};
+            display:flex; align-items:center; justify-content:center;
+            color:white; font-weight:950;
+          ">🧠</div>
+          <div style="color:{TEXT}; font-size:16px;">AI Match</div>
         </div>
 
-        <div class="navlinks" style="display:flex; gap:14px; align-items:center;">
-          <a href="/?page=Home">Home</a>
-          <a href="/?page=Dashboard">Dashboard</a>
-          <a href="/?page=About">About</a>
-          <a href="/?page=Contact">Contact</a>
+        <div style="display:flex; gap:14px; align-items:center;">
+          <a href="/?page=Home" style="text-decoration:none; color:{MUTED}; font-weight:850; padding:8px 10px; border-radius:10px;">Home</a>
+          <a href="/?page=Dashboard" style="text-decoration:none; color:{MUTED}; font-weight:850; padding:8px 10px; border-radius:10px;">Dashboard</a>
+          <a href="/?page=About" style="text-decoration:none; color:{MUTED}; font-weight:850; padding:8px 10px; border-radius:10px;">About</a>
+          <a href="/?page=Contact" style="text-decoration:none; color:{MUTED}; font-weight:850; padding:8px 10px; border-radius:10px;">Contact</a>
         </div>
       </div>
     </div>
     """,
-    unsafe_allow_html=True
+    height=80,
+    scrolling=False,
 )
 
 
@@ -297,10 +287,12 @@ def page_home():
         c1, c2 = st.columns(2)
         with c1:
             st.markdown('<div class="primary">', unsafe_allow_html=True)
-            st.link_button("Try Now →", "/?page=Dashboard", use_container_width=True)
+            if st.button("Try Now →", use_container_width=True, key="home_try"):
+                set_page("Dashboard")
             st.markdown("</div>", unsafe_allow_html=True)
         with c2:
-            st.link_button("Learn More", "/?page=About", use_container_width=True)
+            if st.button("Learn More", use_container_width=True, key="home_learn"):
+                set_page("About")
 
         st.markdown("<br/>", unsafe_allow_html=True)
         st.markdown(
@@ -322,10 +314,10 @@ def page_home():
 
     f1, f2, f3, f4 = st.columns(4)
     feats = [
-        ("AI-Powered Analysis","Advanced algorithms analyze CVs and job descriptions."),
-        ("Instant Results","Get comprehensive results and insights in seconds."),
-        ("Accurate Matching","Skill match + similarity scoring for better decisions."),
-        ("Secure & Private","Your data is processed securely with privacy protection.")
+        ("AI-Powered Analysis", "Advanced algorithms analyze CVs and job descriptions."),
+        ("Instant Results", "Get comprehensive results and insights in seconds."),
+        ("Accurate Matching", "Skill match + similarity scoring for better decisions."),
+        ("Secure & Private", "Your data is processed securely with privacy protection.")
     ]
     for col, (t, d) in zip([f1, f2, f3, f4], feats):
         with col:
