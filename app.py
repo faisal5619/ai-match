@@ -149,15 +149,22 @@ st.markdown(
         color: #0F172A !important;
     }}
 
-    .primary .stButton > button {{
-        background: linear-gradient(90deg, #2563EB, #4F46E5) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 14px !important;
-        font-weight: 900 !important;
-        height: 46px !important;
-        box-shadow: 0 10px 24px rgba(79,70,229,0.18) !important;
-    }}
+.primary .stButton > button {{
+    background: #2563EB !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 14px !important;
+    font-weight: 900 !important;
+    height: 46px !important;
+    box-shadow: 0 10px 24px rgba(37,99,235,0.25) !important;
+    transition: all 0.2s ease !important;
+}}
+
+.primary .stButton > button:hover {{
+    background: #1D4ED8 !important;
+    box-shadow: 0 14px 28px rgba(29,78,216,0.35) !important;
+    transform: translateY(-1px);
+}}
 
     .chip {{
         display: inline-block;
