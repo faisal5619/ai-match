@@ -246,6 +246,55 @@ st.markdown(
     .section-gap {{
         margin-top: 18px;
     }}
+
+    .big-pill {{
+        display: inline-block;
+        padding: 9px 16px;
+        border-radius: 999px;
+        background: rgba(37,99,235,0.10);
+        color: #2563EB;
+        font-weight: 800;
+        font-size: 14px;
+        margin-right: 10px;
+        margin-bottom: 8px;
+    }}
+
+    .feature-box {{
+        background: white;
+        border: 1px solid rgba(15,23,42,0.08);
+        border-radius: 20px;
+        box-shadow: 0 10px 28px rgba(2,6,23,0.06);
+        padding: 22px;
+        min-height: 150px;
+    }}
+
+    .preview-big {{
+        background: linear-gradient(135deg,#EEF2FF,#F8FAFC);
+        border: 1px solid rgba(15,23,42,0.08);
+        border-radius: 24px;
+        box-shadow: 0 10px 28px rgba(2,6,23,0.06);
+        padding: 28px;
+        min-height: 360px;
+    }}
+
+    .dotted-box {{
+        border: 2px dashed rgba(148,163,184,0.35);
+        border-radius: 18px;
+        padding: 20px;
+        background: #FAFBFC;
+    }}
+
+    .inside-box-title {{
+        font-size: 18px;
+        font-weight: 900;
+        margin-bottom: 10px;
+        color: #0F172A;
+    }}
+
+    .about-big {{
+        font-size: 17px;
+        line-height: 1.9;
+    }}
     </style>
     """,
     unsafe_allow_html=True
@@ -365,17 +414,17 @@ st.markdown("</div></div>", unsafe_allow_html=True)
 # ---------------- PAGES ----------------
 def page_home():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
-    left, right = st.columns([1.25, 1])
+    left, right = st.columns([1.15, 1], gap="large")
 
     with left:
-        st.markdown('<span class="pill">AI-Powered Recruitment</span>', unsafe_allow_html=True)
-        st.markdown('<div class="title">AI-Powered CV<br/>Screening & Job<br/>Matching</div>', unsafe_allow_html=True)
+        st.markdown('<span class="big-pill">AI-Powered Recruitment</span>', unsafe_allow_html=True)
+        st.markdown('<div class="title" style="font-size:58px;">AI-Powered CV<br/>Screening & Job<br/>Matching</div>', unsafe_allow_html=True)
         st.markdown(
-            '<div class="subtitle">Upload your CV and compare it instantly with job descriptions using NLP. Get match scores, missing skills, and recommendations in seconds.</div>',
+            '<div class="subtitle" style="font-size:18px; max-width:620px;">Upload your CV and compare it instantly with job descriptions using NLP. Get match scores, missing skills, and recommendations in seconds.</div>',
             unsafe_allow_html=True
         )
 
-        c1, c2 = st.columns(2)
+        c1, c2 = st.columns([1, 1], gap="small")
         with c1:
             st.markdown('<div class="primary">', unsafe_allow_html=True)
             if st.button("Try Now →", use_container_width=True, key="home_try"):
@@ -383,37 +432,36 @@ def page_home():
             st.markdown("</div>", unsafe_allow_html=True)
 
         with c2:
+            st.markdown('<div class="primary">', unsafe_allow_html=True)
             if st.button("Learn More", use_container_width=True, key="home_learn"):
                 set_page("About")
+            st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown("<br/>", unsafe_allow_html=True)
         st.markdown(
-            '<span class="pill">Free to use</span><span class="pill">Instant results</span><span class="pill">AI-powered</span>',
+            '<span class="big-pill">Free to use</span><span class="big-pill">Instant results</span><span class="big-pill">AI-powered</span>',
             unsafe_allow_html=True
         )
 
     with right:
-        st.markdown(
-            '<div class="card" style="padding:32px; min-height:280px; background:linear-gradient(135deg,#EEF2FF,#F8FAFC);">',
-            unsafe_allow_html=True
-        )
+        st.markdown('<div class="preview-big">', unsafe_allow_html=True)
         st.markdown(
             """
-            <div style="width:120px;height:120px;border-radius:22px;background:white;
+            <div style="width:130px;height:130px;border-radius:24px;background:white;
                         display:flex;align-items:center;justify-content:center;
-                        margin:0 auto 24px auto;font-size:54px;
+                        margin:0 auto 28px auto;font-size:58px;
                         box-shadow:0 14px 28px rgba(15,23,42,0.08);">🧠</div>
             """,
             unsafe_allow_html=True
         )
 
-        a, b = st.columns(2)
+        a, b = st.columns(2, gap="small")
         with a:
             st.markdown(
                 """
-                <div class="card" style="padding:14px; border-radius:16px;">
+                <div class="card" style="padding:16px; border-radius:16px; min-height:90px;">
                     <div style="color:#64748B; font-size:12px; font-weight:700;">Match Score</div>
-                    <div style="color:#16A34A; font-size:28px; font-weight:900;">87%</div>
+                    <div style="color:#16A34A; font-size:34px; font-weight:900;">87%</div>
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -421,9 +469,9 @@ def page_home():
         with b:
             st.markdown(
                 """
-                <div class="card" style="padding:14px; border-radius:16px;">
+                <div class="card" style="padding:16px; border-radius:16px; min-height:90px;">
                     <div style="color:#64748B; font-size:12px; font-weight:700;">Analysis</div>
-                    <div style="color:#0F172A; font-size:14px; font-weight:800;">2 seconds</div>
+                    <div style="color:#0F172A; font-size:18px; font-weight:800;">2 seconds</div>
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -432,10 +480,10 @@ def page_home():
         st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<br/><br/>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align:center; font-weight:950;'>Why Choose AI Match?</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; color:#475569; margin-top:-6px;'>Streamline hiring with intelligent CV analysis and matching</p>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align:center; font-weight:950; font-size:44px;'>Why Choose AI Match?</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; color:#475569; margin-top:-6px; font-size:16px;'>Streamline hiring with intelligent CV analysis and matching</p>", unsafe_allow_html=True)
 
-    f1, f2, f3, f4 = st.columns(4)
+    f1, f2, f3, f4 = st.columns(4, gap="large")
     feats = [
         ("AI-Powered Analysis", "Advanced algorithms analyze CVs and job descriptions."),
         ("Instant Results", "Get comprehensive results and insights in seconds."),
@@ -445,17 +493,23 @@ def page_home():
 
     for col, (t, d) in zip([f1, f2, f3, f4], feats):
         with col:
-            st.markdown('<div class="card">', unsafe_allow_html=True)
-            st.markdown(f"<b>{t}</b><br/><span style='color:#475569; font-size:13px;'>{d}</span>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"""
+                <div class="feature-box">
+                    <div style="font-size:20px; font-weight:900; margin-bottom:10px;">{t}</div>
+                    <div style="color:#475569; font-size:14px; line-height:1.8;">{d}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 
 def page_dashboard():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
-    st.markdown("<div class='title' style='font-size:32px;'>CV Analysis Dashboard</div>", unsafe_allow_html=True)
-    st.markdown("<div class='subtitle'>Upload your CV and paste a job description to get instant AI-powered insights.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='title' style='font-size:40px;'>CV Analysis Dashboard</div>", unsafe_allow_html=True)
+    st.markdown("<div class='subtitle' style='font-size:17px;'>Upload your CV and paste a job description to get instant AI-powered insights.</div>", unsafe_allow_html=True)
 
     if "jd_text" not in st.session_state:
         st.session_state.jd_text = ""
@@ -464,31 +518,34 @@ def page_dashboard():
     if "cv_bytes" not in st.session_state:
         st.session_state.cv_bytes = None
 
-    left, right = st.columns([1, 1])
+    left, right = st.columns([1, 1], gap="large")
 
     with left:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown("<div class='h'>Upload CV</div>", unsafe_allow_html=True)
+        st.markdown('<div class="dotted-box">', unsafe_allow_html=True)
 
-        st.markdown('<div class="upload-box">', unsafe_allow_html=True)
+        st.markdown("<div class='inside-box-title'>Upload CV</div>", unsafe_allow_html=True)
+
         up = st.file_uploader(
             "Click to upload or drag and drop",
             type=["pdf", "docx", "txt"],
             key="cv_uploader",
             label_visibility="collapsed"
         )
-        st.markdown("<div class='upload-note'>PDF, DOCX, or TXT (Max 5MB)</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
 
         if up is not None:
             st.session_state.cv_name = up.name
             st.session_state.cv_bytes = up.read()
-            st.success(f"Uploaded: {up.name}")
 
-        st.markdown("<div class='h'>Job Description</div>", unsafe_allow_html=True)
+        if st.session_state.cv_name:
+            st.markdown(
+                f"<div style='margin-bottom:14px; font-weight:700; color:#0F172A;'>Uploaded CV: {st.session_state.cv_name}</div>",
+                unsafe_allow_html=True
+            )
+
+        st.markdown("<div class='inside-box-title'>Job Description</div>", unsafe_allow_html=True)
         st.session_state.jd_text = st.text_area(
             "Paste the job description here...",
-            height=240,
+            height=260,
             value=st.session_state.jd_text,
             key="jd_area"
         )
@@ -496,11 +553,12 @@ def page_dashboard():
         st.markdown('<div class="primary">', unsafe_allow_html=True)
         run = st.button("✨ Analyze Match", use_container_width=True, key="analyze_btn")
         st.markdown("</div>", unsafe_allow_html=True)
+
         st.markdown("</div>", unsafe_allow_html=True)
 
     with right:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown("<div class='h'>Match Score</div>", unsafe_allow_html=True)
+        st.markdown("<div class='inside-box-title'>Match Score</div>", unsafe_allow_html=True)
 
         if run:
             if not st.session_state.cv_bytes or not st.session_state.cv_name:
@@ -520,26 +578,26 @@ def page_dashboard():
                             <div class="score-sub">Good Match</div>
                         </div>
                     </div>
-                    <div style="text-align:center; color:#64748B; font-size:14px; margin-bottom:16px;">
+                    <div style="text-align:center; color:#64748B; font-size:14px; margin-bottom:18px;">
                         Your CV matches {p}% of job requirements
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
 
-                st.markdown("<div class='h'>Matched Skills</div>", unsafe_allow_html=True)
+                st.markdown("<div class='inside-box-title'>Matched Skills</div>", unsafe_allow_html=True)
                 if matched:
                     st.markdown("".join([f"<span class='chip chip-green'>{s}</span>" for s in matched]), unsafe_allow_html=True)
                 else:
                     st.write("None detected")
 
-                st.markdown("<div class='h'>Missing Skills</div>", unsafe_allow_html=True)
+                st.markdown("<div class='inside-box-title' style='margin-top:20px;'>Missing Skills</div>", unsafe_allow_html=True)
                 if missing:
                     st.markdown("".join([f"<span class='chip chip-orange'>{s}</span>" for s in missing]), unsafe_allow_html=True)
                 else:
                     st.write("None detected")
 
-                st.markdown("<div class='h'>AI Recommendations</div>", unsafe_allow_html=True)
+                st.markdown("<div class='inside-box-title' style='margin-top:20px;'>AI Recommendations</div>", unsafe_allow_html=True)
                 if missing:
                     for s in missing[:8]:
                         st.write(f"- Consider adding/highlighting: {s}")
@@ -584,10 +642,10 @@ def page_dashboard():
 
 def page_about():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
-    st.markdown("<div class='title' style='font-size:34px;'>About</div>", unsafe_allow_html=True)
+    st.markdown("<div class='title' style='font-size:46px;'>About</div>", unsafe_allow_html=True)
     st.markdown(
-        f"""
-        <div class="card">
+        """
+        <div class="card about-big">
             <b>AI Match</b> compares a candidate CV with a job description to produce a match score and skill gap analysis.
             <br/><br/>
             <b>Methods</b><br/>
@@ -602,33 +660,54 @@ def page_about():
     st.markdown("</div>", unsafe_allow_html=True)
 
 def page_contact():
-
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     st.markdown("<div class='title' style='font-size:42px; text-align:center;'>Get In Touch</div>", unsafe_allow_html=True)
     st.markdown("<div class='subtitle' style='text-align:center; max-width:700px; margin:0 auto 30px;'>Have questions or feedback? We'd love to hear from you. Send us a message and we'll respond as soon as possible.</div>", unsafe_allow_html=True)
 
-    c1, c2 = st.columns([1, 1.3])
+    c1, c2 = st.columns([1, 1.3], gap="large")
 
     with c1:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown("<b>Email</b><br/>support@aimatch.com<br/>info@aimatch.com", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown(
+            """
+            <div class="card">
+                <div class="inside-box-title">Email</div>
+                <div>support@aimatch.com</div>
+                <div>info@aimatch.com</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
         st.markdown("<div class='section-gap'></div>", unsafe_allow_html=True)
 
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown("<b>Phone</b><br/>+966 12 345 6789<br/>Mon-Fri 9am-6pm EST", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown(
+            """
+            <div class="card">
+                <div class="inside-box-title">Phone</div>
+                <div>+966 12 345 6789</div>
+                <div>Mon-Fri 9am-6pm EST</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
         st.markdown("<div class='section-gap'></div>", unsafe_allow_html=True)
 
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown("<b>Office</b><br/>123 Tech Street<br/>Abha, Aseer<br/>Kingdom of Saudi Arabia", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown(
+            """
+            <div class="card">
+                <div class="inside-box-title">Office</div>
+                <div>123 Tech Street</div>
+                <div>Abha, Aseer</div>
+                <div>Kingdom of Saudi Arabia</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
     with c2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown("<div style='font-size:20px; font-weight:900; margin-bottom:10px;'>Send Us a Message</div>", unsafe_allow_html=True)
+        st.markdown("<div class='inside-box-title'>Send Us a Message</div>", unsafe_allow_html=True)
         st.text_input("Name", key="c_name")
         st.text_input("Email", key="c_email")
         st.text_input("Subject", key="c_subject")
