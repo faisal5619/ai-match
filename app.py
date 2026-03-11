@@ -444,40 +444,58 @@ def page_home():
         )
 
     with right:
-        st.markdown('<div class="preview-big">', unsafe_allow_html=True)
         st.markdown(
             """
-            <div style="width:130px;height:130px;border-radius:24px;background:white;
-                        display:flex;align-items:center;justify-content:center;
-                        margin:0 auto 28px auto;font-size:58px;
-                        box-shadow:0 14px 28px rgba(15,23,42,0.08);">🧠</div>
+            <div style="
+                background: linear-gradient(135deg,#EEF2FF,#F8FAFC);
+                border: 1px solid rgba(15,23,42,0.08);
+                border-radius: 24px;
+                box-shadow: 0 10px 28px rgba(2,6,23,0.06);
+                padding: 28px;
+                min-height: 360px;
+            ">
+                <div style="
+                    width:130px;
+                    height:130px;
+                    border-radius:24px;
+                    background:white;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    margin:0 auto 28px auto;
+                    font-size:58px;
+                    box-shadow:0 14px 28px rgba(15,23,42,0.08);
+                ">🧠</div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                    <div style="
+                        background:white;
+                        border:1px solid rgba(15,23,42,0.08);
+                        border-radius:16px;
+                        padding:16px;
+                        min-height:90px;
+                        box-shadow:0 10px 20px rgba(2,6,23,0.05);
+                    ">
+                        <div style="color:#64748B; font-size:12px; font-weight:700;">Match Score</div>
+                        <div style="color:#16A34A; font-size:34px; font-weight:900;">87%</div>
+                    </div>
+
+                    <div style="
+                        background:white;
+                        border:1px solid rgba(15,23,42,0.08);
+                        border-radius:16px;
+                        padding:16px;
+                        min-height:90px;
+                        box-shadow:0 10px 20px rgba(2,6,23,0.05);
+                    ">
+                        <div style="color:#64748B; font-size:12px; font-weight:700;">Analysis</div>
+                        <div style="color:#0F172A; font-size:18px; font-weight:800;">2 seconds</div>
+                    </div>
+                </div>
+            </div>
             """,
             unsafe_allow_html=True
         )
-
-        a, b = st.columns(2, gap="small")
-        with a:
-            st.markdown(
-                """
-                <div class="card" style="padding:16px; border-radius:16px; min-height:90px;">
-                    <div style="color:#64748B; font-size:12px; font-weight:700;">Match Score</div>
-                    <div style="color:#16A34A; font-size:34px; font-weight:900;">87%</div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-        with b:
-            st.markdown(
-                """
-                <div class="card" style="padding:16px; border-radius:16px; min-height:90px;">
-                    <div style="color:#64748B; font-size:12px; font-weight:700;">Analysis</div>
-                    <div style="color:#0F172A; font-size:18px; font-weight:800;">2 seconds</div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
-        st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<br/><br/>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align:center; font-weight:950; font-size:44px;'>Why Choose AI Match?</h3>", unsafe_allow_html=True)
@@ -521,9 +539,13 @@ def page_dashboard():
     left, right = st.columns([1, 1], gap="large")
 
     with left:
-        st.markdown('<div class="dotted-box">', unsafe_allow_html=True)
-
-        st.markdown("<div class='inside-box-title'>Upload CV</div>", unsafe_allow_html=True)
+        st.markdown(
+            """
+            <div class="dotted-box" style="padding:22px;">
+                <div style="font-size:18px; font-weight:900; margin-bottom:12px; color:#0F172A;">Upload CV</div>
+            """,
+            unsafe_allow_html=True
+        )
 
         up = st.file_uploader(
             "Click to upload or drag and drop",
@@ -538,11 +560,25 @@ def page_dashboard():
 
         if st.session_state.cv_name:
             st.markdown(
-                f"<div style='margin-bottom:14px; font-weight:700; color:#0F172A;'>Uploaded CV: {st.session_state.cv_name}</div>",
+                f"""
+                <div style="
+                    margin-top:10px;
+                    margin-bottom:14px;
+                    padding:12px 14px;
+                    background:white;
+                    border:1px solid rgba(15,23,42,0.08);
+                    border-radius:14px;
+                    font-weight:700;
+                    color:#0F172A;
+                ">
+                    Uploaded CV: {st.session_state.cv_name}
+                </div>
+                """,
                 unsafe_allow_html=True
             )
 
-        st.markdown("<div class='inside-box-title'>Job Description</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:18px; font-weight:900; margin-top:8px; margin-bottom:10px; color:#0F172A;'>Job Description</div>", unsafe_allow_html=True)
+
         st.session_state.jd_text = st.text_area(
             "Paste the job description here...",
             height=260,
@@ -708,13 +744,16 @@ def page_contact():
     with c2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown("<div class='inside-box-title'>Send Us a Message</div>", unsafe_allow_html=True)
+
         st.text_input("Name", key="c_name")
         st.text_input("Email", key="c_email")
         st.text_input("Subject", key="c_subject")
         st.text_area("Message", height=160, key="c_msg")
+
         st.markdown('<div class="primary">', unsafe_allow_html=True)
         st.button("Send Message", use_container_width=True, key="send_msg")
         st.markdown("</div>", unsafe_allow_html=True)
+
         st.caption("Demo UI only (no email sending yet).")
         st.markdown("</div>", unsafe_allow_html=True)
 
