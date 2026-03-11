@@ -149,7 +149,7 @@ st.markdown(
         color: #0F172A !important;
     }}
 
-.primary .stButton > button {
+.primary .stButton > button {{
     background: #2563EB !important;
     color: white !important;
     border: none !important;
@@ -158,13 +158,13 @@ st.markdown(
     height: 46px !important;
     box-shadow: 0 10px 24px rgba(37,99,235,0.25) !important;
     transition: all 0.2s ease !important;
-}
+}}
 
-.primary .stButton > button:hover {
+.primary .stButton > button:hover {{
     background: #1D4ED8 !important;
     box-shadow: 0 14px 28px rgba(29,78,216,0.35) !important;
     transform: translateY(-1px);
-}
+}}
 
     .chip {{
         display: inline-block;
