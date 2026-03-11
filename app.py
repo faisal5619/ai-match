@@ -337,7 +337,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-nav1, nav2, nav3, nav4 = st.columns([1, 1, 1, 1], vertical_alignment="center")
+
 st.markdown("</div></div>", unsafe_allow_html=True)
 
 # Buttons row under navbar (stable + doesn’t break on reruns)
@@ -392,8 +392,11 @@ def page_home():
             unsafe_allow_html=True
         )
 
-        with right:
-        st.markdown('<div class="card" style="padding:32px; min-height:280px; background:linear-gradient(135deg,#EEF2FF,#F8FAFC);">', unsafe_allow_html=True)
+    with right:
+        st.markdown(
+            '<div class="card" style="padding:32px; min-height:280px; background:linear-gradient(135deg,#EEF2FF,#F8FAFC);">',
+            unsafe_allow_html=True
+        )
         st.markdown(
             """
             <div style="width:120px;height:120px;border-radius:22px;background:white;
@@ -448,12 +451,12 @@ def page_home():
 
     st.markdown("</div>", unsafe_allow_html=True)
 
+
 def page_dashboard():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     st.markdown("<div class='title' style='font-size:32px;'>CV Analysis Dashboard</div>", unsafe_allow_html=True)
     st.markdown("<div class='subtitle'>Upload your CV and paste a job description to get instant AI-powered insights.</div>", unsafe_allow_html=True)
 
-    # Persist input across reruns (THIS is another reason things “reset”)
     if "jd_text" not in st.session_state:
         st.session_state.jd_text = ""
     if "cv_name" not in st.session_state:
@@ -464,7 +467,7 @@ def page_dashboard():
     left, right = st.columns([1, 1])
 
     with left:
-                st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown("<div class='h'>Upload CV</div>", unsafe_allow_html=True)
 
         st.markdown('<div class="upload-box">', unsafe_allow_html=True)
@@ -547,7 +550,7 @@ def page_dashboard():
                     st.write(f"TF-IDF Similarity: {sim:.1f}%")
                     st.write(f"Skill Match: {sk:.1f}%")
                     st.write("Final = 25% Similarity + 75% Skill Match")
-                else:
+        else:
             st.markdown(
                 """
                 <div style="text-align:center; padding:90px 20px;">
@@ -577,6 +580,7 @@ def page_dashboard():
         st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
+
 
 def page_about():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
