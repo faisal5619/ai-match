@@ -149,7 +149,7 @@ st.markdown(
         color: #0F172A !important;
     }}
 
-.primary .stButton > button {{
+button[kind="primary"] {{
     background: #2563EB !important;
     color: white !important;
     border: none !important;
@@ -160,8 +160,9 @@ st.markdown(
     transition: all 0.2s ease !important;
 }}
 
-.primary .stButton > button:hover {{
+button[kind="primary"]:hover {{
     background: #1D4ED8 !important;
+    color: white !important;
     box-shadow: 0 14px 28px rgba(29,78,216,0.35) !important;
     transform: translateY(-1px);
 }}
@@ -434,13 +435,13 @@ def page_home():
         c1, c2 = st.columns([1, 1], gap="small")
         with c1:
             st.markdown('<div class="primary">', unsafe_allow_html=True)
-            if st.button("Try Now →", use_container_width=True, key="home_try"):
+            if st.button("Try Now →", use_container_width=True, key="home_try", type="primary"):
                 set_page("Dashboard")
             st.markdown("</div>", unsafe_allow_html=True)
 
         with c2:
             st.markdown('<div class="primary">', unsafe_allow_html=True)
-            if st.button("Learn More", use_container_width=True, key="home_learn"):
+            if st.button("Learn More", use_container_width=True, key="home_learn", type="secondary"):
                 set_page("About")
             st.markdown("</div>", unsafe_allow_html=True)
 
