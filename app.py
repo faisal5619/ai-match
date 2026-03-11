@@ -445,57 +445,23 @@ def page_home():
 
     with right:
         st.markdown(
-            """
-            <div style="
-                background: linear-gradient(135deg,#EEF2FF,#F8FAFC);
-                border: 1px solid rgba(15,23,42,0.08);
-                border-radius: 24px;
-                box-shadow: 0 10px 28px rgba(2,6,23,0.06);
-                padding: 28px;
-                min-height: 360px;
-            ">
-                <div style="
-                    width:130px;
-                    height:130px;
-                    border-radius:24px;
-                    background:white;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    margin:0 auto 28px auto;
-                    font-size:58px;
-                    box-shadow:0 14px 28px rgba(15,23,42,0.08);
-                ">🧠</div>
-
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-                    <div style="
-                        background:white;
-                        border:1px solid rgba(15,23,42,0.08);
-                        border-radius:16px;
-                        padding:16px;
-                        min-height:90px;
-                        box-shadow:0 10px 20px rgba(2,6,23,0.05);
-                    ">
-                        <div style="color:#64748B; font-size:12px; font-weight:700;">Match Score</div>
-                        <div style="color:#16A34A; font-size:34px; font-weight:900;">87%</div>
-                    </div>
-
-                    <div style="
-                        background:white;
-                        border:1px solid rgba(15,23,42,0.08);
-                        border-radius:16px;
-                        padding:16px;
-                        min-height:90px;
-                        box-shadow:0 10px 20px rgba(2,6,23,0.05);
-                    ">
-                        <div style="color:#64748B; font-size:12px; font-weight:700;">Analysis</div>
-                        <div style="color:#0F172A; font-size:18px; font-weight:800;">2 seconds</div>
-                    </div>
-                </div>
-            </div>
-            """,
+            """<div style="background: linear-gradient(135deg,#EEF2FF,#F8FAFC); border: 1px solid rgba(15,23,42,0.08); border-radius: 24px; box-shadow: 0 10px 28px rgba(2,6,23,0.06); padding: 28px; min-height: 360px;">
+<div style="width:130px; height:130px; border-radius:24px; background:white; display:flex; align-items:center; justify-content:center; margin:0 auto 28px auto; font-size:58px; box-shadow:0 14px 28px rgba(15,23,42,0.08);">🧠</div>
+<div style="display:flex; gap:14px;">
+<div style="background:white; border:1px solid rgba(15,23,42,0.08); border-radius:16px; padding:16px; min-height:90px; box-shadow:0 10px 20px rgba(2,6,23,0.05); flex:1;">
+<div style="color:#64748B; font-size:12px; font-weight:700;">Match Score</div>
+<div style="color:#16A34A; font-size:34px; font-weight:900;">87%</div>
+</div>
+<div style="background:white; border:1px solid rgba(15,23,42,0.08); border-radius:16px; padding:16px; min-height:90px; box-shadow:0 10px 20px rgba(2,6,23,0.05); flex:1;">
+<div style="color:#64748B; font-size:12px; font-weight:700;">Analysis</div>
+<div style="color:#0F172A; font-size:18px; font-weight:800;">2 seconds</div>
+</div>
+</div>
+</div>""",
             unsafe_allow_html=True
         )
+
+
 
     st.markdown("<br/><br/>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align:center; font-weight:950; font-size:44px;'>Why Choose AI Match?</h3>", unsafe_allow_html=True)
