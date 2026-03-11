@@ -446,16 +446,25 @@ def page_home():
     with right:
         st.markdown(
             """<div style="background: linear-gradient(135deg,#E0EAFF,#F5F8FF); border: 1px solid rgba(15,23,42,0.08); border-radius: 24px; box-shadow: 0 10px 28px rgba(2,6,23,0.06); padding: 28px; min-height: 420px;">
-<div style="width:130px; height:130px; border-radius:24px; background:white; display:flex; align-items:center; justify-content:center; margin:0 auto 28px auto; font-size:58px; box-shadow:0 14px 28px rgba(15,23,42,0.08);">🧠</div>
-<div style="display:flex; gap:14px;">
-<div style="background:white; border:1px solid rgba(15,23,42,0.08); border-radius:16px; padding:16px; min-height:90px; box-shadow:0 10px 20px rgba(2,6,23,0.05); flex:1;">
-<div style="color:#64748B; font-size:12px; font-weight:700;">Match Score</div>
-<div style="color:#16A34A; font-size:34px; font-weight:900;">87%</div>
+<div style="width:150px; height:150px; border-radius:24px; background:white; display:flex; align-items:center; justify-content:center; margin:0 auto 28px auto; font-size:80px; box-shadow:0 14px 28px rgba(15,23,42,0.08);">🧠</div>
+<div style="display:flex; gap:16px; margin-top:10px;">
+
+<div style="background:white; border-radius:18px; padding:16px; flex:1; box-shadow:0 12px 22px rgba(2,6,23,0.08); display:flex; align-items:center; gap:12px;">
+<div style="width:36px; height:36px; border-radius:10px; background:#16A34A; display:flex; align-items:center; justify-content:center; color:white; font-size:18px;">✓</div>
+<div>
+<div style="font-size:12px; color:#64748B; font-weight:700;">Match Score</div>
+<div style="font-size:26px; font-weight:900; color:#16A34A;">87%</div>
 </div>
-<div style="background:white; border:1px solid rgba(15,23,42,0.08); border-radius:16px; padding:16px; min-height:90px; box-shadow:0 10px 20px rgba(2,6,23,0.05); flex:1;">
-<div style="color:#64748B; font-size:12px; font-weight:700;">Analysis</div>
-<div style="color:#0F172A; font-size:18px; font-weight:800;">2 seconds</div>
 </div>
+
+<div style="background:white; border-radius:18px; padding:16px; flex:1; box-shadow:0 12px 22px rgba(2,6,23,0.08); display:flex; align-items:center; gap:12px;">
+<div style="width:36px; height:36px; border-radius:10px; background:#4F46E5; display:flex; align-items:center; justify-content:center; color:white; font-size:18px;">⚡</div>
+<div>
+<div style="font-size:12px; color:#64748B; font-weight:700;">Analysis</div>
+<div style="font-size:16px; font-weight:900;">2 seconds</div>
+</div>
+</div>
+
 </div>
 </div>""",
             unsafe_allow_html=True
