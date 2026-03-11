@@ -446,7 +446,7 @@ def page_home():
     with right:
         st.markdown(
             """<div style="background: linear-gradient(135deg,#E0EAFF,#F5F8FF); border: 1px solid rgba(15,23,42,0.08); border-radius: 24px; box-shadow: 0 10px 28px rgba(2,6,23,0.06); padding: 28px; min-height: 420px;">
-<div style="width:250px; height:250px; border-radius:32px; background:white; display:flex; align-items:center; justify-content:center; margin:0 auto 28px auto; font-size:150px; box-shadow:0 14px 28px rgba(15,23,42,0.08);">🧠</div>
+<div style="width:180px; height:180px; border-radius:28px; background:white; display:flex; align-items:center; justify-content:center; margin:0 auto 28px auto; font-size:100px; box-shadow:0 14px 28px rgba(15,23,42,0.08);">🧠</div>
 <div style="display:flex; gap:16px; margin-top:10px;">
 
 <div style="background:white; border-radius:18px; padding:16px; flex:1; box-shadow:0 12px 22px rgba(2,6,23,0.08); display:flex; align-items:center; gap:12px;">
