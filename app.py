@@ -323,20 +323,13 @@ button[kind="secondary"]:hover {{
 [data-testid="column"]:last-child > div {{
     background: #FFFFFF !important;
     border: none !important;
-    border-radius: 18px !important;
-    box-shadow: 0 10px 28px rgba(2,6,23,0.06) !important;
-    padding: 24px !important;
+    border-radius: 20px !important;
+    box-shadow:
+        0 12px 30px rgba(2,6,23,0.08),
+        0 2px 6px rgba(2,6,23,0.04) !important;
+    padding: 28px !important;
 }}
 
-
-
-[data-testid="column"]:last-child > div {{
-    background: #FFFFFF !important;
-    border: none !important;
-    border-radius: 18px !important;
-    box-shadow: 0 10px 28px rgba(2,6,23,0.06) !important;
-    padding: 24px !important;
-}}
 
 
     .inside-box-title {{
