@@ -492,7 +492,31 @@ def page_home():
     with right:
         st.markdown(
             """<div style="background: linear-gradient(135deg,#E0EAFF,#F5F8FF); border: 1px solid rgba(15,23,42,0.08); border-radius: 24px; box-shadow: 0 10px 28px rgba(2,6,23,0.06); padding: 28px; min-height: 420px;">
-<div style="width:200px; height:200px; border-radius:32px; background:white; display:flex; align-items:center; justify-content:center; margin:0 auto 28px auto; font-size:125px; box-shadow:0 14px 28px rgba(15,23,42,0.08);">🧠</div>
+<div style="width:200px; height:200px; border-radius:32px; background:white; display:flex; align-items:center; justify-content:center; margin:0 auto 28px auto; box-shadow:0 14px 28px rgba(15,23,42,0.08);">
+    <svg width="110" height="110" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="18" y="18" width="28" height="28" rx="8" fill="#2563EB"/>
+        <rect x="24" y="24" width="16" height="16" rx="4" fill="white"/>
+
+        <rect x="30" y="6" width="4" height="10" rx="2" fill="#2563EB"/>
+        <rect x="30" y="48" width="4" height="10" rx="2" fill="#2563EB"/>
+        <rect x="6" y="30" width="10" height="4" rx="2" fill="#2563EB"/>
+        <rect x="48" y="30" width="10" height="4" rx="2" fill="#2563EB"/>
+
+        <rect x="11" y="11" width="4" height="8" rx="2" transform="rotate(-45 11 11)" fill="#2563EB"/>
+        <rect x="45" y="45" width="4" height="8" rx="2" transform="rotate(-45 45 45)" fill="#2563EB"/>
+        <rect x="45" y="11" width="4" height="8" rx="2" transform="rotate(45 45 11)" fill="#2563EB"/>
+        <rect x="11" y="45" width="4" height="8" rx="2" transform="rotate(45 11 45)" fill="#2563EB"/>
+
+        <circle cx="32" cy="32" r="3.5" fill="#2563EB"/>
+        <circle cx="26" cy="26" r="2" fill="#2563EB"/>
+        <circle cx="38" cy="26" r="2" fill="#2563EB"/>
+        <circle cx="26" cy="38" r="2" fill="#2563EB"/>
+        <circle cx="38" cy="38" r="2" fill="#2563EB"/>
+
+        <path d="M26 26L32 32L38 26M26 38L32 32L38 38" stroke="#2563EB" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+</div>
+
 <div style="display:flex; gap:16px; margin-top:10px;">
 
 <div style="background:white; border-radius:18px; padding:16px; flex:1; box-shadow:0 12px 22px rgba(2,6,23,0.08); display:flex; align-items:center; gap:12px;">
