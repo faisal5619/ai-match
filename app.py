@@ -542,10 +542,11 @@ def page_dashboard():
     left, right = st.columns([1, 1], gap="large")
 
     with left:
+        st.markdown('<div class="dotted-box" style="padding:22px;">', unsafe_allow_html=True)
+
         st.markdown(
             """
-            <div class="dotted-box" style="padding:22px;">
-                <div style="font-size:18px; font-weight:900; margin-bottom:12px; color:#0F172A;">Upload CV</div>
+            <div style="font-size:18px; font-weight:900; margin-bottom:12px; color:#0F172A;">Upload CV</div>
             """,
             unsafe_allow_html=True
         )
@@ -580,7 +581,10 @@ def page_dashboard():
                 unsafe_allow_html=True
             )
 
-        st.markdown("<div style='font-size:18px; font-weight:900; margin-top:8px; margin-bottom:10px; color:#0F172A;'>Job Description</div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div style='font-size:18px; font-weight:900; margin-top:8px; margin-bottom:10px; color:#0F172A;'>Job Description</div>",
+            unsafe_allow_html=True
+        )
 
         st.session_state.jd_text = st.text_area(
             "Paste the job description here...",
@@ -589,11 +593,12 @@ def page_dashboard():
             key="jd_area"
         )
 
-        st.markdown('<div class="primary">', unsafe_allow_html=True)
+        st.markdown("<div style='margin-top:14px;'>", unsafe_allow_html=True)
         run = st.button("✨ Analyze Match", use_container_width=True, key="analyze_btn")
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown("</div>", unsafe_allow_html=True)
+
 
     with right:
         st.markdown('<div class="card">', unsafe_allow_html=True)
