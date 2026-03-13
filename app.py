@@ -320,15 +320,6 @@ button[kind="secondary"]:hover {{
     box-shadow: none !important;
 }}
 
-[data-testid="column"]:last-child [data-testid="stVerticalBlock"] {{
-    background: #FFFFFF !important;
-    border: none !important;
-    border-radius: 20px !important;
-    padding: 28px !important;
-    box-shadow: 0 12px 30px rgba(2,6,23,0.10), 0 2px 8px rgba(2,6,23,0.05) !important;
-}}
-
-
 
 
     .inside-box-title {{
@@ -615,88 +606,89 @@ def page_dashboard():
             run = st.button("✨ Analyze Match", use_container_width=True, key="analyze_btn")
             st.markdown("</div>", unsafe_allow_html=True)
 
+    with right:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.markdown("<div class='inside-box-title'>Match Score</div>", unsafe_allow_html=True)
 
-
-with right:
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-
-    st.markdown("<div class='inside-box-title'>Match Score</div>", unsafe_allow_html=True)
-
-
-            if run:
-                if not st.session_state.cv_bytes or not st.session_state.cv_name:
-                    st.error("Upload a CV first.")
-                elif not st.session_state.jd_text.strip():
-                    st.error("Paste a job description first.")
-                else:
-                    cv_text = extract_text(st.session_state.cv_name, st.session_state.cv_bytes)
-                    final, sim, sk, matched, missing = compute_all(cv_text, st.session_state.jd_text)
-                    p = max(0, min(100, int(final)))
-
-                    st.markdown(
-                        f"""
-                        <div class="ring" style="--p:{p}%;">
-                            <div class="ring-inner">
-                                <div class="score">{p}%</div>
-                                <div class="score-sub">Good Match</div>
-                            </div>
-                        </div>
-                        <div style="text-align:center; color:#64748B; font-size:14px; margin-bottom:18px;">
-                            Your CV matches {p}% of job requirements
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-
-                    st.markdown("<div class='inside-box-title'>Matched Skills</div>", unsafe_allow_html=True)
-                    if matched:
-                        st.markdown("".join([f"<span class='chip chip-green'>{s}</span>" for s in matched]), unsafe_allow_html=True)
-                    else:
-                        st.write("None detected")
-
-                    st.markdown("<div class='inside-box-title' style='margin-top:20px;'>Missing Skills</div>", unsafe_allow_html=True)
-                    if missing:
-                        st.markdown("".join([f"<span class='chip chip-orange'>{s}</span>" for s in missing]), unsafe_allow_html=True)
-                    else:
-                        st.write("None detected")
-
-                    st.markdown("<div class='inside-box-title' style='margin-top:20px;'>AI Recommendations</div>", unsafe_allow_html=True)
-                    if missing:
-                        for s in missing[:8]:
-                            st.write(f"- Consider adding/highlighting: {s}")
-                    else:
-                        st.write("Your CV aligns well with this job description.")
-
-                    with st.expander("Score breakdown"):
-                        st.write(f"TF-IDF Similarity: {sim:.1f}%")
-                        st.write(f"Skill Match: {sk:.1f}%")
-                        st.write("Final = 25% Similarity + 75% Skill Match")
+        if run:
+            if not st.session_state.cv_bytes or not st.session_state.cv_name:
+                st.error("Upload a CV first.")
+            elif not st.session_state.jd_text.strip():
+                st.error("Paste a job description first.")
             else:
+                cv_text = extract_text(st.session_state.cv_name, st.session_state.cv_bytes)
+                final, sim, sk, matched, missing = compute_all(cv_text, st.session_state.jd_text)
+                p = max(0, min(100, int(final)))
+
                 st.markdown(
-                    """
-                    <div style="text-align:center; padding:90px 20px;">
-                        <div style="
-                            width:120px;
-                            height:70px;
-                            margin:0 auto 18px;
-                            border-radius:999px;
-                            background:#F1F5F9;
-                            display:flex;
-                            align-items:center;
-                            justify-content:center;
-                            font-size:38px;
-                            color:#94A3B8;
-                        ">↗</div>
-                        <div style="font-size:28px; font-weight:900; color:#334155; margin-bottom:10px;">
-                            Ready to Analyze
+                    f"""
+                    <div class="ring" style="--p:{p}%;">
+                        <div class="ring-inner">
+                            <div class="score">{p}%</div>
+                            <div class="score-sub">Good Match</div>
                         </div>
-                        <div style="color:#64748B; font-size:15px; max-width:340px; margin:0 auto; line-height:1.7;">
-                            Upload your CV and paste a job description, then click "Analyze Match" to see your results
-                        </div>
+                    </div>
+                    <div style="text-align:center; color:#64748B; font-size:14px; margin-bottom:18px;">
+                        Your CV matches {p}% of job requirements
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
+
+                st.markdown("<div class='inside-box-title'>Matched Skills</div>", unsafe_allow_html=True)
+                if matched:
+                    st.markdown("".join([f"<span class='chip chip-green'>{s}</span>" for s in matched]), unsafe_allow_html=True)
+                else:
+                    st.write("None detected")
+
+                st.markdown("<div class='inside-box-title' style='margin-top:20px;'>Missing Skills</div>", unsafe_allow_html=True)
+                if missing:
+                    st.markdown("".join([f"<span class='chip chip-orange'>{s}</span>" for s in missing]), unsafe_allow_html=True)
+                else:
+                    st.write("None detected")
+
+                st.markdown("<div class='inside-box-title' style='margin-top:20px;'>AI Recommendations</div>", unsafe_allow_html=True)
+                if missing:
+                    for s in missing[:8]:
+                        st.write(f"- Consider adding/highlighting: {s}")
+                else:
+                    st.write("Your CV aligns well with this job description.")
+
+                with st.expander("Score breakdown"):
+                    st.write(f"TF-IDF Similarity: {sim:.1f}%")
+                    st.write(f"Skill Match: {sk:.1f}%")
+                    st.write("Final = 25% Similarity + 75% Skill Match")
+        else:
+            st.markdown(
+                """
+                <div style="text-align:center; padding:90px 20px;">
+                    <div style="
+                        width:120px;
+                        height:70px;
+                        margin:0 auto 18px;
+                        border-radius:999px;
+                        background:#F1F5F9;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        font-size:38px;
+                        color:#94A3B8;
+                    ">↗</div>
+                    <div style="font-size:28px; font-weight:900; color:#334155; margin-bottom:10px;">
+                        Ready to Analyze
+                    </div>
+                    <div style="color:#64748B; font-size:15px; max-width:340px; margin:0 auto; line-height:1.7;">
+                        Upload your CV and paste a job description, then click "Analyze Match" to see your results
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+
+
 
 
 
