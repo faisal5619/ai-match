@@ -473,7 +473,7 @@ def page_home():
             unsafe_allow_html=True
         )
 
-        c1, c2, c3 = st.columns([0.22, 0.22, 0.56], gap="small")
+        c1, c2, c3 = st.columns([0.28, 0.28, 0.44], gap="small")
 
         with c1:
             if st.button("Try Now →", key="home_try", type="primary"):
