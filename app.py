@@ -493,27 +493,11 @@ def page_home():
         st.markdown(
             """<div style="background: linear-gradient(135deg,#E0EAFF,#F5F8FF); border: 1px solid rgba(15,23,42,0.08); border-radius: 24px; box-shadow: 0 10px 28px rgba(2,6,23,0.06); padding: 28px; min-height: 420px;">
 <div style="width:200px; height:200px; border-radius:32px; background:white; display:flex; align-items:center; justify-content:center; margin:0 auto 28px auto; box-shadow:0 14px 28px rgba(15,23,42,0.08);">
-    <div style="position:relative; width:110px; height:110px;">
-        <div style="position:absolute; top:25px; left:25px; width:60px; height:60px; background:#2563EB; border-radius:16px;"></div>
-        <div style="position:absolute; top:40px; left:40px; width:30px; height:30px; background:white; border-radius:8px;"></div>
-
-        <div style="position:absolute; top:0; left:51px; width:8px; height:18px; background:#2563EB; border-radius:4px;"></div>
-        <div style="position:absolute; bottom:0; left:51px; width:8px; height:18px; background:#2563EB; border-radius:4px;"></div>
-        <div style="position:absolute; top:51px; left:0; width:18px; height:8px; background:#2563EB; border-radius:4px;"></div>
-        <div style="position:absolute; top:51px; right:0; width:18px; height:8px; background:#2563EB; border-radius:4px;"></div>
-
-        <div style="position:absolute; top:10px; left:10px; width:8px; height:18px; background:#2563EB; border-radius:4px; transform:rotate(-45deg);"></div>
-        <div style="position:absolute; top:10px; right:10px; width:8px; height:18px; background:#2563EB; border-radius:4px; transform:rotate(45deg);"></div>
-        <div style="position:absolute; bottom:10px; left:10px; width:8px; height:18px; background:#2563EB; border-radius:4px; transform:rotate(45deg);"></div>
-        <div style="position:absolute; bottom:10px; right:10px; width:8px; height:18px; background:#2563EB; border-radius:4px; transform:rotate(-45deg);"></div>
-
-        <div style="position:absolute; top:50px; left:50px; width:10px; height:10px; background:#2563EB; border-radius:50%;"></div>
-        <div style="position:absolute; top:40px; left:40px; width:6px; height:6px; background:#2563EB; border-radius:50%;"></div>
-        <div style="position:absolute; top:40px; left:64px; width:6px; height:6px; background:#2563EB; border-radius:50%;"></div>
-        <div style="position:absolute; top:64px; left:40px; width:6px; height:6px; background:#2563EB; border-radius:50%;"></div>
-        <div style="position:absolute; top:64px; left:64px; width:6px; height:6px; background:#2563EB; border-radius:50%;"></div>
+    <div style="width:110px; height:110px; border-radius:28px; background:linear-gradient(135deg,#2563EB,#4F46E5); display:flex; align-items:center; justify-content:center; color:white; font-size:34px; font-weight:900; letter-spacing:2px; box-shadow:0 12px 24px rgba(37,99,235,0.25);">
+        AI
     </div>
 </div>
+
 
 
 <div style="display:flex; gap:16px; margin-top:10px;">
