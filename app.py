@@ -464,8 +464,11 @@ def page_home():
 
     with left:
         st.markdown('<span class="big-pill">AI-Powered Recruitment</span>', unsafe_allow_html=True)
-        st.markdown('<div class="title" style="font-size:58px;">AI-Powered CV<br/>Screening & Job<br/>Matching</div>', unsafe_allow_html=True)
-         st.markdown(
+        st.markdown(
+            '<div class="title" style="font-size:58px;">AI-Powered CV<br/>Screening & Job<br/>Matching</div>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
             '<div class="subtitle" style="font-size:18px; max-width:620px;">Upload your CV and compare it instantly with job descriptions using NLP. Get match scores, missing skills, and recommendations in seconds.</div>',
             unsafe_allow_html=True
         )
@@ -485,7 +488,6 @@ def page_home():
             '<span class="big-pill">Free to use</span><span class="big-pill">Instant results</span><span class="big-pill">AI-powered</span>',
             unsafe_allow_html=True
         )
-
 
     with right:
         st.markdown(
@@ -514,8 +516,6 @@ def page_home():
             unsafe_allow_html=True
         )
 
-
-
     st.markdown("<br/><br/>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align:center; font-weight:950; font-size:44px;'>Why Choose AI Match?</h3>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center; color:#475569; margin-top:-6px; font-size:16px;'>Streamline hiring with intelligent CV analysis and matching</p>", unsafe_allow_html=True)
@@ -541,6 +541,7 @@ def page_home():
             )
 
     st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 def page_dashboard():
