@@ -470,7 +470,7 @@ def page_home():
             unsafe_allow_html=True
         )
 
-        c1, c2 = st.columns([1, 1], gap="small")
+        c1, c2 = st.columns([0.35, 0.35], gap="small")
         with c1:
             st.markdown('<div class="primary">', unsafe_allow_html=True)
             if st.button("Try Now →", key="home_try", type="primary"):
