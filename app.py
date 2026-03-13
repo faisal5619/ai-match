@@ -611,7 +611,7 @@ def page_dashboard():
             )
 
             st.markdown("<div style='margin-top:14px;'>", unsafe_allow_html=True)
-            run = st.button("✨ Analyze Match", use_container_width=True, key="analyze_btn")
+            run = st.button("✨ Analyze Match", use_container_width=True, key="analyze_btn", type="primary")
             st.markdown("</div>", unsafe_allow_html=True)
 
 
