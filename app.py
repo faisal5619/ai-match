@@ -102,13 +102,14 @@ st.markdown(
         color: #2563EB !important;
     }}
 
-    .card {{
-        background: white;
-        border: 1px solid rgba(15,23,42,0.08);
-        border-radius: 20px;
-        box-shadow: 0 10px 28px rgba(2,6,23,0.06);
-        padding: 22px;
-    }}
+.card {{
+    background: #FFFFFF;
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 14px 34px rgba(2,6,23,0.10), 0 3px 10px rgba(2,6,23,0.05);
+    padding: 24px;
+}}
+
 
     .title {{
         font-size: 42px;
