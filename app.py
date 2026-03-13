@@ -475,16 +475,13 @@ def page_home():
 
         c1, c2, c3 = st.columns([0.28, 0.28, 0.44], gap="small")
 
-c1, c2, c3 = st.columns([0.28, 0.28, 0.44], gap="small")
+        with c1:
+            if st.button("Try Now →", key="home_try", type="primary", use_container_width=True):
+                set_page("Dashboard")
 
-with c1:
-    if st.button("Try Now →", key="home_try", type="primary", use_container_width=True):
-        set_page("Dashboard")
-
-with c2:
-    if st.button("Learn More", key="home_learn", type="secondary", use_container_width=True):
-        set_page("About")
-
+        with c2:
+            if st.button("Learn More", key="home_learn", type="secondary", use_container_width=True):
+                set_page("About")
 
         st.markdown("<br/>", unsafe_allow_html=True)
         st.markdown(
@@ -544,6 +541,7 @@ with c2:
             )
 
     st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 
