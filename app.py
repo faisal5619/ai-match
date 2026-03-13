@@ -465,29 +465,27 @@ def page_home():
     with left:
         st.markdown('<span class="big-pill">AI-Powered Recruitment</span>', unsafe_allow_html=True)
         st.markdown('<div class="title" style="font-size:58px;">AI-Powered CV<br/>Screening & Job<br/>Matching</div>', unsafe_allow_html=True)
-        st.markdown(
+         st.markdown(
             '<div class="subtitle" style="font-size:18px; max-width:620px;">Upload your CV and compare it instantly with job descriptions using NLP. Get match scores, missing skills, and recommendations in seconds.</div>',
             unsafe_allow_html=True
         )
 
-        c1, c2 = st.columns([0.35, 0.35], gap="small")
+        c1, c2, c3 = st.columns([0.22, 0.22, 0.56], gap="small")
+
         with c1:
-            st.markdown('<div class="primary">', unsafe_allow_html=True)
             if st.button("Try Now →", key="home_try", type="primary"):
                 set_page("Dashboard")
-            st.markdown("</div>", unsafe_allow_html=True)
 
         with c2:
-            st.markdown('<div class="primary">', unsafe_allow_html=True)
             if st.button("Learn More", key="home_learn", type="secondary"):
                 set_page("About")
-            st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown("<br/>", unsafe_allow_html=True)
         st.markdown(
             '<span class="big-pill">Free to use</span><span class="big-pill">Instant results</span><span class="big-pill">AI-powered</span>',
             unsafe_allow_html=True
         )
+
 
     with right:
         st.markdown(
