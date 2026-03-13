@@ -617,9 +617,11 @@ def page_dashboard():
 
 
 
-    with right:
-        with st.container():
-            st.markdown("<div class='inside-box-title'>Match Score</div>", unsafe_allow_html=True)
+with right:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+
+    st.markdown("<div class='inside-box-title'>Match Score</div>", unsafe_allow_html=True)
+
 
             if run:
                 if not st.session_state.cv_bytes or not st.session_state.cv_name:
