@@ -312,18 +312,34 @@ button[kind="secondary"]:hover {{
     background: #FAFBFC;
 }}
 
-[data-testid="stVerticalBlockBorderWrapper"] {{
+/* LEFT dashboard box */
+[data-testid="column"]:first-child [data-testid="stVerticalBlockBorderWrapper"] {{
+    border: 1px solid rgba(15,23,42,0.08) !important;
+    border-radius: 18px !important;
+    padding: 20px !important;
+    background: #FAFBFC !important;
+    box-shadow: none !important;
+}}
+
+/* RIGHT dashboard box */
+[data-testid="column"]:last-child [data-testid="stVerticalBlockBorderWrapper"] {{
+    background: #FFFFFF !important;
     border: none !important;
     outline: none !important;
     box-shadow: 0 10px 28px rgba(2,6,23,0.06) !important;
     border-radius: 18px !important;
     padding: 24px !important;
-    background: white !important;
 }}
 
-[data-testid="stVerticalBlock"] > div {{
+/* remove any inner line that Streamlit may add on the right side */
+[data-testid="column"]:last-child [data-testid="stVerticalBlockBorderWrapper"] * {{
+    outline: none !important;
+}}
+
+[data-testid="column"]:last-child [data-testid="stVerticalBlock"] > div {{
     border: none !important;
 }}
+
 
 
 
