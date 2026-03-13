@@ -312,7 +312,7 @@ button[kind="secondary"]:hover {{
     background: #FAFBFC;
 }}
 
-/* LEFT dashboard box */
+
 [data-testid="column"]:first-child [data-testid="stVerticalBlockBorderWrapper"] {{
     border: 1px solid rgba(15,23,42,0.08) !important;
     border-radius: 18px !important;
@@ -321,7 +321,7 @@ button[kind="secondary"]:hover {{
     box-shadow: none !important;
 }}
 
-/* LEFT dashboard box */
+
 [data-testid="column"]:first-child [data-testid="stVerticalBlockBorderWrapper"] {{
     border: 1px solid rgba(15,23,42,0.08) !important;
     border-radius: 18px !important;
@@ -330,7 +330,7 @@ button[kind="secondary"]:hover {{
     box-shadow: none !important;
 }}
 
-/* RIGHT dashboard area */
+
 [data-testid="column"]:last-child > div {{
     background: #FFFFFF !important;
     border: none !important;
