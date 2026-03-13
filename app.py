@@ -312,7 +312,6 @@ button[kind="secondary"]:hover {{
     background: #FAFBFC;
 }}
 
-
 [data-testid="column"]:first-child [data-testid="stVerticalBlockBorderWrapper"] {{
     border: 1px solid rgba(15,23,42,0.08) !important;
     border-radius: 18px !important;
@@ -320,6 +319,15 @@ button[kind="secondary"]:hover {{
     background: #FAFBFC !important;
     box-shadow: none !important;
 }}
+
+[data-testid="column"]:last-child > div {{
+    background: #FFFFFF !important;
+    border: none !important;
+    border-radius: 18px !important;
+    box-shadow: 0 10px 28px rgba(2,6,23,0.06) !important;
+    padding: 24px !important;
+}}
+
 
 
 [data-testid="column"]:last-child > div {{
