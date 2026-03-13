@@ -156,7 +156,7 @@ button[kind="primary"] {{
     border: none !important;
     border-radius: 14px !important;
     font-weight: 900 !important;
-    height: 46px !important;
+    height: 38px !important;
     box-shadow: 0 10px 24px rgba(37,99,235,0.25) !important;
     transition: all 0.2s ease !important;
 }}
@@ -174,7 +174,7 @@ button[kind="secondary"] {{
     border: 1px solid rgba(15,23,42,0.10) !important;
     border-radius: 14px !important;
     font-weight: 900 !important;
-    height: 46px !important;
+    height: 38px !important;
     box-shadow: 0 10px 24px rgba(2,6,23,0.08) !important;
     transition: all 0.2s ease !important;
 }}
