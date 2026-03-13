@@ -320,15 +320,14 @@ button[kind="secondary"]:hover {{
     box-shadow: none !important;
 }}
 
-[data-testid="column"]:last-child > div {{
+[data-testid="column"]:last-child [data-testid="stVerticalBlock"] {{
     background: #FFFFFF !important;
     border: none !important;
     border-radius: 20px !important;
-    box-shadow:
-        0 12px 30px rgba(2,6,23,0.08),
-        0 2px 6px rgba(2,6,23,0.04) !important;
     padding: 28px !important;
+    box-shadow: 0 12px 30px rgba(2,6,23,0.10), 0 2px 8px rgba(2,6,23,0.05) !important;
 }}
+
 
 
 
