@@ -313,11 +313,11 @@ button[kind="secondary"]:hover {{
 }}
 
 [data-testid="stVerticalBlockBorderWrapper"] {{
-    border: 2px dashed rgba(148,163,184,0.35) !important;
+    border: none !important;
     border-radius: 18px !important;
-    padding: 20px !important;
-    background: #FAFBFC !important;
-    box-shadow: none !important;
+    padding: 24px !important;
+    background: white !important;
+    box-shadow: 0 10px 28px rgba(2,6,23,0.06) !important;
 }}
 
 
