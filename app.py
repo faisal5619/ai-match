@@ -314,11 +314,17 @@ button[kind="secondary"]:hover {{
 
 [data-testid="stVerticalBlockBorderWrapper"] {{
     border: none !important;
+    outline: none !important;
+    box-shadow: 0 10px 28px rgba(2,6,23,0.06) !important;
     border-radius: 18px !important;
     padding: 24px !important;
     background: white !important;
-    box-shadow: 0 10px 28px rgba(2,6,23,0.06) !important;
 }}
+
+[data-testid="stVerticalBlock"] > div {{
+    border: none !important;
+}}
+
 
 
     .inside-box-title {{
