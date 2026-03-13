@@ -167,6 +167,26 @@ button[kind="primary"]:hover {{
     transform: translateY(-1px);
 }}
 
+button[kind="secondary"] {{
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+    border: 1px solid rgba(15,23,42,0.10) !important;
+    border-radius: 14px !important;
+    font-weight: 900 !important;
+    height: 46px !important;
+    box-shadow: 0 10px 24px rgba(2,6,23,0.08) !important;
+    transition: all 0.2s ease !important;
+}}
+
+button[kind="secondary"]:hover {{
+    background: #F8FAFC !important;
+    color: #0F172A !important;
+    border: 1px solid rgba(15,23,42,0.14) !important;
+    box-shadow: 0 14px 28px rgba(2,6,23,0.12) !important;
+    transform: translateY(-1px);
+}}
+
+
     .chip {{
         display: inline-block;
         padding: 7px 12px;
