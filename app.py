@@ -473,13 +473,13 @@ def page_home():
         c1, c2 = st.columns([1, 1], gap="small")
         with c1:
             st.markdown('<div class="primary">', unsafe_allow_html=True)
-            if st.button("Try Now →", use_container_width=True, key="home_try", type="primary"):
+            if st.button("Try Now →", key="home_try", type="primary"):
                 set_page("Dashboard")
             st.markdown("</div>", unsafe_allow_html=True)
 
         with c2:
             st.markdown('<div class="primary">', unsafe_allow_html=True)
-            if st.button("Learn More", use_container_width=True, key="home_learn", type="secondary"):
+            if st.button("Learn More", key="home_learn", type="secondary"):
                 set_page("About")
             st.markdown("</div>", unsafe_allow_html=True)
 
