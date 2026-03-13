@@ -766,7 +766,6 @@ def page_contact():
 
     with c2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown("<div class='inside-box-title'>Send Us a Message</div>", unsafe_allow_html=True)
 
         st.text_input("Name", key="c_name")
         st.text_input("Email", key="c_email")
