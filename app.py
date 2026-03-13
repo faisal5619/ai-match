@@ -764,17 +764,20 @@ def page_contact():
             unsafe_allow_html=True
         )
 
-with c2:
-    st.text_input("Name", key="c_name")
-    st.text_input("Email", key="c_email")
-    st.text_input("Subject", key="c_subject")
-    st.text_area("Message", height=160, key="c_msg")
+    with c2:
+        st.text_input("Name", key="c_name")
+        st.text_input("Email", key="c_email")
+        st.text_input("Subject", key="c_subject")
+        st.text_area("Message", height=160, key="c_msg")
 
-    st.markdown('<div class="primary">', unsafe_allow_html=True)
-    st.button("Send Message", use_container_width=True, key="send_msg")
-    st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown('<div class="primary">', unsafe_allow_html=True)
+        st.button("Send Message", use_container_width=True, key="send_msg")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    st.caption("Demo UI only (no email sending yet).")
+        st.caption("Demo UI only (no email sending yet).")
+)
+
+
 
 
    
