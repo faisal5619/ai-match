@@ -775,7 +775,7 @@ def page_contact():
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.caption("Demo UI only (no email sending yet).")
-)
+
 
 
 
