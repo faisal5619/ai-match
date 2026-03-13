@@ -305,12 +305,21 @@ button[kind="secondary"]:hover {{
         min-height: 360px;
     }}
 
-    .dotted-box {{
-        border: 2px dashed rgba(148,163,184,0.35);
-        border-radius: 18px;
-        padding: 20px;
-        background: #FAFBFC;
-    }}
+.dotted-box {{
+    border: 2px dashed rgba(148,163,184,0.35);
+    border-radius: 18px;
+    padding: 20px;
+    background: #FAFBFC;
+}}
+
+[data-testid="stVerticalBlockBorderWrapper"] {{
+    border: 2px dashed rgba(148,163,184,0.35) !important;
+    border-radius: 18px !important;
+    padding: 20px !important;
+    background: #FAFBFC !important;
+    box-shadow: none !important;
+}}
+
 
     .inside-box-title {{
         font-size: 18px;
@@ -542,62 +551,60 @@ def page_dashboard():
     left, right = st.columns([1, 1], gap="large")
 
     with left:
-        st.markdown('<div class="dotted-box" style="padding:22px;">', unsafe_allow_html=True)
-
-        st.markdown(
-            """
-            <div style="font-size:18px; font-weight:900; margin-bottom:12px; color:#0F172A;">Upload CV</div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        up = st.file_uploader(
-            "Click to upload or drag and drop",
-            type=["pdf", "docx", "txt"],
-            key="cv_uploader",
-            label_visibility="collapsed"
-        )
-
-        if up is not None:
-            st.session_state.cv_name = up.name
-            st.session_state.cv_bytes = up.read()
-
-        if st.session_state.cv_name:
+        with st.container(border=True):
             st.markdown(
-                f"""
-                <div style="
-                    margin-top:10px;
-                    margin-bottom:14px;
-                    padding:12px 14px;
-                    background:white;
-                    border:1px solid rgba(15,23,42,0.08);
-                    border-radius:14px;
-                    font-weight:700;
-                    color:#0F172A;
-                ">
-                    Uploaded CV: {st.session_state.cv_name}
-                </div>
+                """
+                <div style="font-size:18px; font-weight:900; margin-bottom:12px; color:#0F172A;">Upload CV</div>
                 """,
                 unsafe_allow_html=True
             )
 
-        st.markdown(
-            "<div style='font-size:18px; font-weight:900; margin-top:8px; margin-bottom:10px; color:#0F172A;'>Job Description</div>",
-            unsafe_allow_html=True
-        )
+            up = st.file_uploader(
+                "Click to upload or drag and drop",
+                type=["pdf", "docx", "txt"],
+                key="cv_uploader",
+                label_visibility="collapsed"
+            )
 
-        st.session_state.jd_text = st.text_area(
-            "Paste the job description here...",
-            height=260,
-            value=st.session_state.jd_text,
-            key="jd_area"
-        )
+            if up is not None:
+                st.session_state.cv_name = up.name
+                st.session_state.cv_bytes = up.read()
 
-        st.markdown("<div style='margin-top:14px;'>", unsafe_allow_html=True)
-        run = st.button("✨ Analyze Match", use_container_width=True, key="analyze_btn")
-        st.markdown("</div>", unsafe_allow_html=True)
+            if st.session_state.cv_name:
+                st.markdown(
+                    f"""
+                    <div style="
+                        margin-top:10px;
+                        margin-bottom:14px;
+                        padding:12px 14px;
+                        background:white;
+                        border:1px solid rgba(15,23,42,0.08);
+                        border-radius:14px;
+                        font-weight:700;
+                        color:#0F172A;
+                    ">
+                        Uploaded CV: {st.session_state.cv_name}
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
-        st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown(
+                "<div style='font-size:18px; font-weight:900; margin-top:8px; margin-bottom:10px; color:#0F172A;'>Job Description</div>",
+                unsafe_allow_html=True
+            )
+
+            st.session_state.jd_text = st.text_area(
+                "Paste the job description here...",
+                height=260,
+                value=st.session_state.jd_text,
+                key="jd_area"
+            )
+
+            st.markdown("<div style='margin-top:14px;'>", unsafe_allow_html=True)
+            run = st.button("✨ Analyze Match", use_container_width=True, key="analyze_btn")
+            st.markdown("</div>", unsafe_allow_html=True)
+
 
 
     with right:
