@@ -71,13 +71,14 @@ st.markdown(
 }}
 
 
-    .brand {{
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: 900;
-        font-size: 18px;
-    }}
+.brand {{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-weight: 900;
+    font-size: 26px;
+}}
+
 
 .logo {{
     width: 48px;
