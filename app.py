@@ -503,7 +503,7 @@ def page_home():
 <div style="background: linear-gradient(135deg,#E0EAFF,#F5F8FF); border: 1px solid rgba(15,23,42,0.08); border-radius: 24px; box-shadow: 0 10px 28px rgba(2,6,23,0.06); padding: 28px; min-height: 420px;">
 
 <div style="width:200px; height:200px; border-radius:32px; background:white; display:flex; align-items:center; justify-content:center; margin:0 auto 28px auto; box-shadow:0 14px 28px rgba(15,23,42,0.08);">
-    <img src="data:image/png;base64,{AI_ICON}" style="width:110px; height:110px; object-fit:contain; filter:drop-shadow(0 12px 24px rgba(37,99,235,0.18));" />
+    <img src="data:image/png;base64,{AI_ICON}" style="width:130px; height:130px; object-fit:contain; filter:drop-shadow(0 12px 24px rgba(37,99,235,0.18));" />
 </div>
 
 <div style="display:flex; gap:16px; margin-top:10px;">
