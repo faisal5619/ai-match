@@ -1,23 +1,21 @@
 import requests
 from bs4 import BeautifulSoup
-from data.sample_jobs import jobs as sample_jobs
-
+from data.sample_jobs import SAMPLE_JOBS
 
 
 def scrape_remoteok():
-    sample_jobs = []
+    jobs = []
 
     try:
         url = "https://remoteok.com/remote-dev-jobs"
         headers = {"User-Agent": "Mozilla/5.0"}
 
-        r = requests.get(url, headers=headers)
+        r = requests.get(url, headers=headers, timeout=10)
         soup = BeautifulSoup(r.text, "html.parser")
 
         rows = soup.select("tr.job")
 
         for row in rows[:10]:
-
             title = row.select_one("h2")
             company = row.select_one(".companyLink h3")
             link = row.get("data-href")
@@ -28,7 +26,8 @@ def scrape_remoteok():
                     "company": company.text.strip() if company else "Unknown",
                     "location": "Remote",
                     "description": title.text.strip(),
-                    "url": f"https://remoteok.com{link}" if link else "#"
+                    "url": f"https://remoteok.com{link}" if link else "#",
+                    "source": "remoteok"
                 })
 
     except Exception:
@@ -38,11 +37,18 @@ def scrape_remoteok():
 
 
 def load_jobs():
-
     scraped = scrape_remoteok()
 
     if scraped:
         return scraped
 
-    # fallback if scraping fails
-    return sample_jobs
+    return SAMPLE_JOBS
+
+
+def get_job_text(job):
+    return f"""
+    Title: {job.get('title', '')}
+    Company: {job.get('company', '')}
+    Location: {job.get('location', '')}
+    Description: {job.get('description', '')}
+    """.strip()
