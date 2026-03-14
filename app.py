@@ -79,18 +79,25 @@ st.markdown(
         font-size: 18px;
     }}
 
-    .logo {{
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        background: #2563EB;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 900;
-        box-shadow: 0 8px 18px rgba(37,99,235,0.25);
-    }}
+.logo {{
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #2563EB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 18px rgba(37,99,235,0.25);
+    overflow: hidden;
+}}
+
+.logo-img {{
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    display: block;
+}}
+
 
     .navlinks .stButton > button {{
         background: transparent !important;
@@ -437,14 +444,17 @@ col1, col2 = st.columns([2,3])
 
 with col1:
     st.markdown(
-        """
+        f"""
         <div class="brand">
-            <div class="logo">🧠</div>
+            <div class="logo">
+                <img src="data:image/png;base64,{AI_ICON}" class="logo-img" />
+            </div>
             <div>AI Match</div>
         </div>
         """,
         unsafe_allow_html=True
     )
+
 
 with col2:
     b1, b2, b3, b4 = st.columns(4)
