@@ -5,7 +5,7 @@ from data.sample_jobs import jobs as sample_jobs
 
 
 def scrape_remoteok():
-    jobs = []
+    sample_jobs = []
 
     try:
         url = "https://remoteok.com/remote-dev-jobs"
