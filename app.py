@@ -17,7 +17,6 @@ TEXT = "#0F172A"
 MUTED = "#475569"
 BORDER = "rgba(15,23,42,0.10)"
 SHADOW = "0 12px 30px rgba(2,6,23,0.06)"
-
 GREEN_BG = "#DCFCE7"
 GREEN_TXT = "#166534"
 ORANGE_BG = "#FFEDD5"
@@ -499,8 +498,8 @@ def page_home():
         )
 
     with right:
-st.markdown(
-    f"""
+        st.markdown(
+            f"""
 <div style="background: linear-gradient(135deg,#E0EAFF,#F5F8FF); border: 1px solid rgba(15,23,42,0.08); border-radius: 24px; box-shadow: 0 10px 28px rgba(2,6,23,0.06); padding: 28px; min-height: 420px;">
 
 <div style="width:200px; height:200px; border-radius:32px; background:white; display:flex; align-items:center; justify-content:center; margin:0 auto 28px auto; box-shadow:0 14px 28px rgba(15,23,42,0.08);">
@@ -528,9 +527,8 @@ st.markdown(
 </div>
 </div>
 """,
-    unsafe_allow_html=True
-)
-
+            unsafe_allow_html=True
+        )
 
     st.markdown("<br/><br/>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align:center; font-weight:950; font-size:44px;'>Why Choose AI Match?</h3>", unsafe_allow_html=True)
@@ -557,7 +555,6 @@ st.markdown(
             )
 
     st.markdown("</div>", unsafe_allow_html=True)
-
 
 
 
