@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
-from data.sample_jobs import sample_jobs
+from data.sample_jobs import jobs as sample_jobs
+
 
 
 def scrape_remoteok():
