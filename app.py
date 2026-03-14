@@ -80,16 +80,17 @@ st.markdown(
     }}
 
 .logo {{
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
     background: #2563EB;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 18px rgba(37,99,235,0.25);
+    box-shadow: 0 10px 22px rgba(37,99,235,0.30);
     overflow: hidden;
 }}
+
 
 .logo-img {{
     width: 22px;
