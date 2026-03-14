@@ -6,6 +6,12 @@ from PyPDF2 import PdfReader
 from docx import Document
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from agents.cv_agent import analyze_cv
+from agents.job_agent import load_jobs
+from agents.match_agent import analyze_all_jobs
+from agents.recommendation_agent import generate_recommendations
+from database.db import init_db, insert_resume, insert_match
+init_db()
 
 # ---------------- CONFIG ----------------
 st.set_page_config(page_title="AI Match", page_icon="🧠", layout="wide")
@@ -653,58 +659,101 @@ def page_dashboard():
         with st.container(border=True):
             st.markdown("<div class='inside-box-title'>Match Score</div>", unsafe_allow_html=True)
 
-            if run:
-                if not st.session_state.cv_bytes or not st.session_state.cv_name:
-                    st.error("Upload a CV first.")
-                elif not st.session_state.jd_text.strip():
-                    st.error("Paste a job description first.")
-                else:
-                    cv_text = extract_text(st.session_state.cv_name, st.session_state.cv_bytes)
-                    final, sim, sk, matched, missing = compute_all(cv_text, st.session_state.jd_text)
-                    p = max(0, min(100, int(final)))
+if run:
+    if not st.session_state.cv_bytes or not st.session_state.cv_name:
+        st.error("Upload a CV first.")
+    else:
+        cv_data = analyze_cv(st.session_state.cv_name, st.session_state.cv_bytes)
 
-                    st.markdown(
-                        f"""
-                        <div class="ring" style="--p:{p}%;">
-                            <div class="ring-inner">
-                                <div class="score">{p}%</div>
-                                <div class="score-sub">Good Match</div>
-                            </div>
-                        </div>
-                        <div style="text-align:center; color:#64748B; font-size:14px; margin-bottom:18px;">
-                            Your CV matches {p}% of job requirements
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+        resume_id = insert_resume(
+            st.session_state.cv_name,
+            cv_data["text"],
+            cv_data["skills"]
+        )
 
-                    st.markdown("<div class='inside-box-title'>Matched Skills</div>", unsafe_allow_html=True)
-                    if matched:
-                        st.markdown("".join([f"<span class='chip chip-green'>{s}</span>" for s in matched]), unsafe_allow_html=True)
-                    else:
-                        st.write("None detected")
+        jobs = load_jobs()
+        match_results = analyze_all_jobs(cv_data, jobs)
+        recommendations = generate_recommendations(match_results, top_n=3)
 
-                    st.markdown("<div class='inside-box-title' style='margin-top:20px;'>Missing Skills</div>", unsafe_allow_html=True)
-                    if missing:
-                        st.markdown("".join([f"<span class='chip chip-orange'>{s}</span>" for s in missing]), unsafe_allow_html=True)
-                    else:
-                        st.write("None detected")
+        if match_results:
+            top_result = match_results[0]
+            p = max(0, min(100, int(top_result["final_score"])))
 
-                    st.markdown("<div class='inside-box-title' style='margin-top:20px;'>AI Recommendations</div>", unsafe_allow_html=True)
-                    if missing:
-                        for s in missing[:8]:
-                            st.write(f"- Consider adding/highlighting: {s}")
-                    else:
-                        st.write("Your CV aligns well with this job description.")
+            st.markdown(
+                f"""
+                <div class="ring" style="--p:{p}%;">
+                    <div class="ring-inner">
+                        <div class="score">{p}%</div>
+                        <div class="score-sub">Top Match</div>
+                    </div>
+                </div>
+                <div style="text-align:center; color:#64748B; font-size:14px; margin-bottom:18px;">
+                    Best job match found automatically from available jobs
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
-                    with st.expander("Score breakdown"):
-                        st.write(f"TF-IDF Similarity: {sim:.1f}%")
-                        st.write(f"Skill Match: {sk:.1f}%")
-                        st.write("Final = 25% Similarity + 75% Skill Match")
-            else:
+            st.markdown("<div class='inside-box-title'>Top Recommended Jobs</div>", unsafe_allow_html=True)
+
+            for rec in recommendations:
                 st.markdown(
-                    """
-                    <div style="text-align:center; padding:90px 20px;">
+                    f"""
+                    <div style="
+                        border:1px solid rgba(15,23,42,0.08);
+                        border-radius:16px;
+                        padding:16px;
+                        margin-bottom:14px;
+                        background:white;
+                    ">
+                        <div style="font-size:18px; font-weight:900; color:#0F172A;">
+                            {rec['title']}
+                        </div>
+                        <div style="color:#475569; font-size:14px; margin-bottom:6px;">
+                            {rec['company']} • {rec['location']}
+                        </div>
+                        <div style="margin-bottom:8px;">
+                            <span class="chip chip-green">{rec['fit_label']}</span>
+                            <span class="chip chip-green">{rec['final_score']}%</span>
+                        </div>
+                        <div style="color:#334155; font-size:14px; line-height:1.7; margin-bottom:8px;">
+                            {rec['reason']}
+                        </div>
+                        <div style="color:#9A3412; font-size:14px; line-height:1.7;">
+                            {rec['tip']}
+                        </div>
+                        <div style="margin-top:10px;">
+                            <a href="{rec['url']}" target="_blank">View Job</a>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+            st.markdown("<div class='inside-box-title' style='margin-top:20px;'>Detailed Match Breakdown</div>", unsafe_allow_html=True)
+
+            for result in match_results[:3]:
+                insert_match(
+                    resume_id=resume_id,
+                    job_title=result["title"],
+                    company=result["company"],
+                    location=result["location"],
+                    similarity_score=result["similarity_score"],
+                    skill_score=result["skill_score"],
+                    final_score=result["final_score"],
+                    matched_skills=result["matched_skills"],
+                    missing_skills=result["missing_skills"]
+                )
+
+                with st.expander(f"{result['title']} at {result['company']} — {result['final_score']}%"):
+                    st.write(f"**Location:** {result['location']}")
+                    st.write(f"**Similarity Score:** {result['similarity_score']}%")
+                    st.write(f"**Skill Score:** {result['skill_score']}%")
+                    st.write(f"**Matched Skills:** {', '.join(result['matched_skills']) if result['matched_skills'] else 'None'}")
+                    st.write(f"**Missing Skills:** {', '.join(result['missing_skills']) if result['missing_skills'] else 'None'}")
+        else:
+            st.warning("No jobs were available for matching.")
+
                         <div style="
                             width:120px;
                             height:70px;
