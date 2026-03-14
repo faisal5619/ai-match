@@ -28,7 +28,8 @@ def img_to_base64(path: str) -> str:
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
-AI_ICON = img_to_base64("ai (1).png")
+AI_ICON = img_to_base64("ai_icon.png")
+
 
 
 # ---------------- CSS ----------------
