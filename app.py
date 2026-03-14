@@ -50,23 +50,26 @@ st.markdown(
         padding: 20px 20px 60px;
     }}
 
-    .nav {{
-        position: sticky;
-        top: 0;
-        z-index: 999;
-        background: rgba(255,255,255,0.92);
-        backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(15,23,42,0.08);
-    }}
+.nav {{
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    background: transparent;
+    backdrop-filter: none;
+    border-bottom: none;
+    box-shadow: none;
+}}
 
-    .nav-inner {{
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 14px 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }}
+
+.nav-inner {{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 8px 20px 0px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}}
+
 
     .brand {{
         display: flex;
