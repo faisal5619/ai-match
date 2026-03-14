@@ -446,24 +446,6 @@ with col1:
 with col2:
     b1, b2, b3, b4 = st.columns(4)
 
-    def nav_btn(label, target):
-        cls = "active" if st.session_state.page == target else ""
-        st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
-        if st.button(label, use_container_width=True, key=f"nav_{target}"):
-            set_page(target)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with b1:
-        nav_btn("⌂ Home", "Home")
-    with b2:
-        nav_btn("⌘ Dashboard", "Dashboard")
-    with b3:
-        nav_btn("ⓘ About", "About")
-    with b4:
-        nav_btn("✉ Contact", "Contact")
-
-st.markdown("</div></div>", unsafe_allow_html=True)
-
 def nav_btn(label, target):
     cls = "active" if st.session_state.page == target else ""
     st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
