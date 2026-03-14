@@ -590,8 +590,6 @@ def page_dashboard():
     st.markdown("<div class='title' style='font-size:40px;'>CV Analysis Dashboard</div>", unsafe_allow_html=True)
     st.markdown("<div class='subtitle' style='font-size:17px;'>Upload your CV and let the system automatically find the best matching jobs for you.</div>", unsafe_allow_html=True)
 
-    if "jd_text" not in st.session_state:
-        st.session_state.jd_text = ""
     if "cv_name" not in st.session_state:
         st.session_state.cv_name = None
     if "cv_bytes" not in st.session_state:
@@ -638,17 +636,6 @@ def page_dashboard():
                     unsafe_allow_html=True
                 )
 
-            st.markdown(
-                "<div style='font-size:18px; font-weight:900; margin-top:8px; margin-bottom:10px; color:#0F172A;'>Job Description</div>",
-                unsafe_allow_html=True
-            )
-
-            st.session_state.jd_text = st.text_area(
-                "Paste the job description here...",
-                height=260,
-                value=st.session_state.jd_text,
-                key="jd_area"
-            )
 
             st.markdown("<div style='margin-top:14px;'>", unsafe_allow_html=True)
             run = st.button("✨ Analyze Match", use_container_width=True, key="analyze_btn", type="primary")
