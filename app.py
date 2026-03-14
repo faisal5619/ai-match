@@ -777,33 +777,31 @@ def page_about():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     st.markdown("<div class='title' style='font-size:46px;'>About</div>", unsafe_allow_html=True)
 
-    st.markdown('<div class="card about-big">', unsafe_allow_html=True)
+    with st.container(border=True):
+        st.write(
+            "**AI Match** is an intelligent multi-agent system that analyzes CVs "
+            "and automatically matches them with relevant job opportunities."
+        )
 
-    st.write(
-        "**AI Match** is an intelligent multi-agent system that analyzes CVs "
-        "and automatically matches them with relevant job opportunities."
-    )
+        st.markdown("### How the system works")
+        st.write("• CV Agent extracts text and detects skills from uploaded resumes")
+        st.write("• Job Agent retrieves job listings from the web using web scraping")
+        st.write("• Vector Agent creates semantic embeddings and performs similarity search using FAISS")
+        st.write("• Match Agent evaluates similarity and skill compatibility")
+        st.write("• Recommendation Agent explains results and suggests improvements")
 
-    st.markdown("### How the system works")
-    st.write("• CV Agent extracts text and detects skills from uploaded resumes")
-    st.write("• Job Agent retrieves job listings from the web using web scraping")
-    st.write("• Vector Agent creates semantic embeddings and performs similarity search using FAISS")
-    st.write("• Match Agent evaluates similarity and skill compatibility")
-    st.write("• Recommendation Agent explains results and suggests improvements")
+        st.markdown("### Technologies used")
+        st.write("• Natural Language Processing (NLP)")
+        st.write("• Sentence Transformers for semantic embeddings")
+        st.write("• FAISS vector database for similarity search")
+        st.write("• Web scraping for real-time job retrieval")
+        st.write("• Streamlit for the interactive web interface")
 
-    st.markdown("### Technologies used")
-    st.write("• Natural Language Processing (NLP)")
-    st.write("• Sentence Transformers for semantic embeddings")
-    st.write("• FAISS vector database for similarity search")
-    st.write("• Web scraping for real-time job retrieval")
-    st.write("• Streamlit for the interactive web interface")
+        st.write(
+            "The platform automatically analyzes candidate profiles, retrieves relevant job postings, "
+            "and recommends the most suitable opportunities."
+        )
 
-    st.write(
-        "The platform automatically analyzes candidate profiles, retrieves relevant job postings, "
-        "and recommends the most suitable opportunities."
-    )
-
-    st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
 
