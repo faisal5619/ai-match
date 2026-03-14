@@ -64,7 +64,7 @@ st.markdown(
 .nav-inner {{
     max-width: 1200px;
     margin: 0 auto;
-    padding: 8px 20px 0px;
+    padding: 10px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -77,6 +77,7 @@ st.markdown(
     gap: 14px;
     font-weight: 900;
     font-size: 26px;
+    height: 48px;
 }}
 
 
