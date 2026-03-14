@@ -776,20 +776,37 @@ def page_dashboard():
 def page_about():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     st.markdown("<div class='title' style='font-size:46px;'>About</div>", unsafe_allow_html=True)
-    st.markdown(
-        """
-        <div class="card about-big">
-            <b>AI Match</b> compares a candidate CV with a job description to produce a match score and skill gap analysis.
-            <br/><br/>
-            <b>Methods</b><br/>
-            • Text extraction (PDF/DOCX/TXT)<br/>
-            • TF-IDF vectorization + Cosine similarity<br/>
-            • Keyword-based skill extraction<br/>
-            • Combined scoring (skills-weighted)
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+st.markdown(
+    """
+    <div class="card about-big">
+        <b>AI Match</b> is an intelligent multi-agent system that analyzes CVs and automatically matches them with relevant job opportunities.
+
+        <br/><br/>
+
+        <b>How the system works</b><br/>
+        • CV Agent extracts text and detects skills from uploaded resumes<br/>
+        • Job Agent retrieves job listings from the web using web scraping<br/>
+        • Vector Agent creates semantic embeddings and performs similarity search using FAISS<br/>
+        • Match Agent evaluates similarity and skill compatibility<br/>
+        • Recommendation Agent explains results and suggests improvements
+
+        <br/><br/>
+
+        <b>Technologies used</b><br/>
+        • Natural Language Processing (NLP)<br/>
+        • Sentence Transformers for semantic embeddings<br/>
+        • FAISS vector database for similarity search<br/>
+        • Web scraping for real-time job retrieval<br/>
+        • Streamlit for the interactive web interface
+
+        <br/><br/>
+
+        The platform automatically analyzes candidate profiles, retrieves relevant job postings, and recommends the most suitable opportunities.
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
     st.markdown("</div>", unsafe_allow_html=True)
 
 def page_contact():
