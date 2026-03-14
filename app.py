@@ -430,22 +430,39 @@ def set_page(p: str):
 # ---------------- NAVBAR UI ----------------
 st.markdown('<div class="nav"><div class="nav-inner">', unsafe_allow_html=True)
 
-st.markdown(
-    f"""
-    <div class="brand">
-        <div class="logo">🧠</div>
-        <div>AI Match</div>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+col1, col2 = st.columns([2,3])
 
+with col1:
+    st.markdown(
+        """
+        <div class="brand">
+            <div class="logo">🧠</div>
+            <div>AI Match</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+with col2:
+    b1, b2, b3, b4 = st.columns(4)
+
+    def nav_btn(label, target):
+        cls = "active" if st.session_state.page == target else ""
+        st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
+        if st.button(label, use_container_width=True, key=f"nav_{target}"):
+            set_page(target)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with b1:
+        nav_btn("⌂ Home", "Home")
+    with b2:
+        nav_btn("⌘ Dashboard", "Dashboard")
+    with b3:
+        nav_btn("ⓘ About", "About")
+    with b4:
+        nav_btn("✉ Contact", "Contact")
 
 st.markdown("</div></div>", unsafe_allow_html=True)
-
-# Buttons row under navbar (stable + doesn’t break on reruns)
-st.markdown('<div class="wrap"><div class="navlinks">', unsafe_allow_html=True)
-b1, b2, b3, b4 = st.columns([1, 1, 1, 1])
 
 def nav_btn(label, target):
     cls = "active" if st.session_state.page == target else ""
