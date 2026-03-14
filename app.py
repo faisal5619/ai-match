@@ -1,6 +1,6 @@
 import re
+import base64
 from io import BytesIO
-
 import streamlit as st
 from PyPDF2 import PdfReader
 from docx import Document
@@ -22,6 +22,14 @@ GREEN_BG = "#DCFCE7"
 GREEN_TXT = "#166534"
 ORANGE_BG = "#FFEDD5"
 ORANGE_TXT = "#9A3412"
+
+
+def img_to_base64(path: str) -> str:
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
+
+AI_ICON = img_to_base64("ai (1).png")
+
 
 # ---------------- CSS ----------------
 st.markdown(
@@ -493,11 +501,8 @@ def page_home():
         st.markdown(
             """<div style="background: linear-gradient(135deg,#E0EAFF,#F5F8FF); border: 1px solid rgba(15,23,42,0.08); border-radius: 24px; box-shadow: 0 10px 28px rgba(2,6,23,0.06); padding: 28px; min-height: 420px;">
 <div style="width:200px; height:200px; border-radius:32px; background:white; display:flex; align-items:center; justify-content:center; margin:0 auto 28px auto; box-shadow:0 14px 28px rgba(15,23,42,0.08);">
-    <div style="width:110px; height:110px; border-radius:28px; background:linear-gradient(135deg,#2563EB,#4F46E5); display:flex; align-items:center; justify-content:center; color:white; font-size:34px; font-weight:900; letter-spacing:2px; box-shadow:0 12px 24px rgba(37,99,235,0.25);">
-        AI
-    </div>
+    <img src="data:image/png;base64,{AI_ICON}" style="width:110px; height:110px; object-fit:contain; filter:drop-shadow(0 12px 24px rgba(37,99,235,0.18));" />
 </div>
-
 
 
 <div style="display:flex; gap:16px; margin-top:10px;">
