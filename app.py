@@ -65,11 +65,7 @@ st.markdown(
     max-width: 1200px;
     margin: 0 auto;
     padding: 10px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
 }}
-
 
 .brand {{
     display: flex;
@@ -77,7 +73,6 @@ st.markdown(
     gap: 14px;
     font-weight: 900;
     font-size: 26px;
-    height: 48px;
 }}
 
 
@@ -439,14 +434,15 @@ def set_page(p: str):
     st.rerun()
 
 # ---------------- NAVBAR UI ----------------
+# ---------------- NAVBAR UI ----------------
 st.markdown('<div class="nav"><div class="nav-inner">', unsafe_allow_html=True)
 
-col1, col2 = st.columns([2,3])
+col1, col2 = st.columns([1.5, 3.5], vertical_alignment="center")
 
 with col1:
     st.markdown(
         f"""
-        <div class="brand" style="margin-top:-12px;">
+        <div class="brand">
             <div class="logo">
                 <img src="data:image/png;base64,{AI_ICON}" class="logo-img" />
             </div>
@@ -456,28 +452,27 @@ with col1:
         unsafe_allow_html=True
     )
 
-
-
 with col2:
-    b1, b2, b3, b4 = st.columns(4)
+    b1, b2, b3, b4 = st.columns(4, vertical_alignment="center")
 
-def nav_btn(label, target):
-    cls = "active" if st.session_state.page == target else ""
-    st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
-    if st.button(label, use_container_width=True, key=f"nav_{target}"):
-        set_page(target)
-    st.markdown("</div>", unsafe_allow_html=True)
+    def nav_btn(label, target):
+        cls = "active" if st.session_state.page == target else ""
+        st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
+        if st.button(label, use_container_width=True, key=f"nav_{target}"):
+            set_page(target)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-with b1:
-    nav_btn("⌂ Home", "Home")
-with b2:
-    nav_btn("⌘ Dashboard", "Dashboard")
-with b3:
-    nav_btn("ⓘ About", "About")
-with b4:
-    nav_btn("✉ Contact", "Contact")
+    with b1:
+        nav_btn("⌂ Home", "Home")
+    with b2:
+        nav_btn("⌘ Dashboard", "Dashboard")
+    with b3:
+        nav_btn("ⓘ About", "About")
+    with b4:
+        nav_btn("✉ Contact", "Contact")
 
 st.markdown("</div></div>", unsafe_allow_html=True)
+
 
 # ---------------- PAGES ----------------
 def page_home():
