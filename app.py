@@ -106,15 +106,21 @@ st.markdown(
         box-shadow: none !important;
     }}
 
-    .navlinks .stButton > button:hover {{
-        background: rgba(37,99,235,0.08) !important;
-        color: #2563EB !important;
-    }}
+.navlinks .stButton > button:hover {{
+    background: rgba(37,99,235,0.10) !important;
+    color: #2563EB !important;
+    border-radius: 12px !important;
+}}
 
-    .active .stButton > button {{
-        background: rgba(37,99,235,0.12) !important;
-        color: #2563EB !important;
-    }}
+
+.active .stButton > button {{
+    background: rgba(37,99,235,0.15) !important;
+    color: #2563EB !important;
+    border-radius: 12px !important;
+    font-weight: 800 !important;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.15) !important;
+}}
+
 
 .card {{
     background: #FFFFFF;
