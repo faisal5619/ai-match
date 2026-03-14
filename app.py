@@ -446,7 +446,7 @@ col1, col2 = st.columns([2,3])
 with col1:
     st.markdown(
         f"""
-        <div class="brand">
+        <div class="brand" style="margin-top:-14px;">
             <div class="logo">
                 <img src="data:image/png;base64,{AI_ICON}" class="logo-img" />
             </div>
@@ -455,6 +455,7 @@ with col1:
         """,
         unsafe_allow_html=True
     )
+)
 
 
 with col2:
