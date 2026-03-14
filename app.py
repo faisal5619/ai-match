@@ -805,6 +805,9 @@ def page_about():
 </div>
 """, unsafe_allow_html=True)
 
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
 
 
 def page_contact():
