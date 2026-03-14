@@ -1,8 +1,8 @@
-import re
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from agents.job_agent import get_job_text
 from agents.cv_agent import clean_text, extract_skills
+from database.vector_agent import build_job_index, search_jobs
 
 
 def tfidf_similarity_score(cv_text, job_text):
@@ -69,9 +69,15 @@ def analyze_job_match(cv_data, job):
 
 
 def analyze_all_jobs(cv_data, jobs):
+    if not jobs:
+        return []
+
+    index, _ = build_job_index(jobs)
+    candidate_jobs = search_jobs(cv_data["text"], jobs, index, top_k=min(5, len(jobs)))
+
     results = []
 
-    for job in jobs:
+    for job in candidate_jobs:
         result = analyze_job_match(cv_data, job)
         results.append(result)
 
