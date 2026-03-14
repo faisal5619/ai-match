@@ -91,14 +91,12 @@ st.markdown(
     overflow: hidden;
 }}
 
-
 .logo-img {{
-    width: 22px;
-    height: 22px;
+    width: 30px;
+    height: 30px;
     object-fit: contain;
     display: block;
 }}
-
 
     .navlinks .stButton > button {{
         background: transparent !important;
