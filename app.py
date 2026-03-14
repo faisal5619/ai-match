@@ -95,31 +95,33 @@ st.markdown(
     display: block;
 }}
 
-    .navlinks .stButton > button {{
-        background: transparent !important;
-        border: none !important;
-        color: #64748B !important;
-        font-weight: 700 !important;
-        padding: 10px 12px !important;
-        border-radius: 10px !important;
-        height: auto !important;
-        box-shadow: none !important;
-    }}
+.navlinks .stButton > button {{
+    background: #FFFFFF !important;
+    border: 1px solid rgba(15,23,42,0.06) !important;
+    color: #475569 !important;
+    font-weight: 700 !important;
+    padding: 10px 12px !important;
+    border-radius: 12px !important;
+    height: auto !important;
+    box-shadow: 0 8px 18px rgba(2,6,23,0.06) !important;
+    transition: all 0.2s ease !important;
+}}
 
 .navlinks .stButton > button:hover {{
-    background: rgba(37,99,235,0.10) !important;
+    background: rgba(37,99,235,0.08) !important;
     color: #2563EB !important;
-    border-radius: 12px !important;
+    border: 1px solid rgba(37,99,235,0.10) !important;
 }}
-
 
 .active .stButton > button {{
-    background: rgba(37,99,235,0.15) !important;
+    background: rgba(37,99,235,0.14) !important;
     color: #2563EB !important;
+    border: 1px solid rgba(37,99,235,0.18) !important;
     border-radius: 12px !important;
     font-weight: 800 !important;
-    box-shadow: 0 4px 12px rgba(37,99,235,0.15) !important;
+    box-shadow: none !important;
 }}
+
 
 
 .card {{
@@ -423,23 +425,6 @@ def compute_all(cv_text: str, jd_text: str):
     missing = sorted(jd_sk - cv_sk)
     return final, sim, sk, matched, missing
 
-# ---------------- NAV (THIS FIXES YOUR PROBLEM) ----------------
-PAGES = ["Home", "Dashboard", "About", "Contact"]
-
-if "page" not in st.session_state:
-    st.session_state.page = "Home"
-
-# If URL has ?page=... use it, otherwise keep session_state (so uploads don't kick you back Home)
-qp = st.query_params.get("page")
-if qp in PAGES:
-    st.session_state.page = qp
-
-def set_page(p: str):
-    st.session_state.page = p
-    st.query_params["page"] = p  # keep URL in sync (important!)
-    st.rerun()
-
-# ---------------- NAVBAR UI ----------------
 # ---------------- NAVBAR UI ----------------
 st.markdown('<div class="nav"><div class="nav-inner">', unsafe_allow_html=True)
 
@@ -459,6 +444,8 @@ with col1:
     )
 
 with col2:
+    st.markdown('<div class="navlinks">', unsafe_allow_html=True)
+
     b1, b2, b3, b4 = st.columns(4, vertical_alignment="center")
 
     def nav_btn(label, target):
@@ -477,7 +464,10 @@ with col2:
     with b4:
         nav_btn("✉ Contact", "Contact")
 
+    st.markdown("</div>", unsafe_allow_html=True)
+
 st.markdown("</div></div>", unsafe_allow_html=True)
+
 
 
 # ---------------- PAGES ----------------
