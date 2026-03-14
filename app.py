@@ -588,7 +588,7 @@ def page_home():
 def page_dashboard():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     st.markdown("<div class='title' style='font-size:40px;'>CV Analysis Dashboard</div>", unsafe_allow_html=True)
-    st.markdown("<div class='subtitle' style='font-size:17px;'>Upload your CV and paste a job description to get instant AI-powered insights.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='subtitle' style='font-size:17px;'>Upload your CV and let the system automatically find the best matching jobs for you.</div>", unsafe_allow_html=True)
 
     if "jd_text" not in st.session_state:
         st.session_state.jd_text = ""
