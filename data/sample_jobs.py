@@ -24,4 +24,23 @@ SAMPLE_JOBS = [
     {
         "title": "Frontend Developer",
         "company": "Web House",
-        "location
+        "location": "Jeddah",
+        "description": """
+        Required skills: HTML, CSS, JavaScript, React, Git, teamwork, communication,
+        UI knowledge, and problem solving.
+        """,
+        "url": "https://example.com/frontend-developer",
+        "source": "sample_jobs"
+    },
+    {
+        "title": "Data Analyst",
+        "company": "Insight Hub",
+        "location": "Dammam",
+        "description": """
+        Candidate should know SQL, Excel, Python, data analysis, reporting,
+        communication, teamwork, and problem solving.
+        """,
+        "url": "https://example.com/data-analyst",
+        "source": "sample_jobs"
+    }
+]
