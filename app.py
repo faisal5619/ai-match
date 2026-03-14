@@ -425,6 +425,22 @@ def compute_all(cv_text: str, jd_text: str):
     missing = sorted(jd_sk - cv_sk)
     return final, sim, sk, matched, missing
 
+# ---------------- NAV / ROUTING ----------------
+PAGES = ["Home", "Dashboard", "About", "Contact"]
+
+if "page" not in st.session_state:
+    st.session_state.page = "Home"
+
+qp = st.query_params.get("page")
+if qp in PAGES:
+    st.session_state.page = qp
+
+def set_page(p: str):
+    st.session_state.page = p
+    st.query_params["page"] = p
+    st.rerun()
+
+
 # ---------------- NAVBAR UI ----------------
 st.markdown('<div class="nav"><div class="nav-inner">', unsafe_allow_html=True)
 
