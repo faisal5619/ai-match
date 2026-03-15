@@ -1,5 +1,17 @@
 SAMPLE_JOBS = [
     {
+        "title": "Computer Science Trainee",
+        "company": "AI Match Company",
+        "location": "Abha",
+        "description": """
+        We are looking for a Computer Science Trainee with skills in computer science, java,
+        ai, machine learning, microsoft office, excel, powerpoint, teamwork,
+        problem solving, english, and arabic.
+        """,
+        "url": "https://example.com/computer-science-trainee",
+        "source": "sample_jobs"
+    },
+    {
         "title": "Python Developer",
         "company": "Tech Solutions",
         "location": "Abha",
