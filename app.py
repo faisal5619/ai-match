@@ -1,5 +1,8 @@
 import re
 import base64
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from io import BytesIO
 import streamlit as st
 from PyPDF2 import PdfReader
@@ -34,6 +37,46 @@ def img_to_base64(path: str) -> str:
         return base64.b64encode(f.read()).decode("utf-8")
 
 AI_ICON = img_to_base64("ai_icon.png")
+
+
+
+def send_interview_email(to_email, candidate_name, score, job_title, company):
+    sender_email = st.secrets["EMAIL_ADDRESS"]
+    sender_password = st.secrets["EMAIL_PASSWORD"]
+
+    subject = "Interview Invitation - AI Match"
+
+    body = f"""
+Dear {candidate_name},
+
+Thank you for using AI Match.
+
+We are pleased to inform you that your CV achieved a matching score of {score:.2f}% for the position of {job_title} at {company}.
+
+Since your score is above our required threshold, you have been shortlisted for the next stage of the recruitment process.
+
+Our team will contact you soon regarding the interview details.
+
+Best regards,
+AI Match Recruitment Team
+"""
+
+    msg = MIMEMultipart()
+    msg["From"] = sender_email
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain"))
+
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, to_email, msg.as_string())
+        server.quit()
+        return True
+    except Exception as e:
+        print("Email sending failed:", e)
+        return False
 
 
 
@@ -584,7 +627,6 @@ def page_home():
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-
 def page_dashboard():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     st.markdown("<div class='title' style='font-size:40px;'>CV Analysis Dashboard</div>", unsafe_allow_html=True)
@@ -594,6 +636,10 @@ def page_dashboard():
         st.session_state.cv_name = None
     if "cv_bytes" not in st.session_state:
         st.session_state.cv_bytes = None
+    if "candidate_name" not in st.session_state:
+        st.session_state.candidate_name = ""
+    if "candidate_email" not in st.session_state:
+        st.session_state.candidate_email = ""
 
     left, right = st.columns([1, 1], gap="large")
 
@@ -605,6 +651,9 @@ def page_dashboard():
                 """,
                 unsafe_allow_html=True
             )
+
+            st.text_input("Full Name", key="candidate_name")
+            st.text_input("Email Address", key="candidate_email")
 
             up = st.file_uploader(
                 "Click to upload or drag and drop",
@@ -636,18 +685,22 @@ def page_dashboard():
                     unsafe_allow_html=True
                 )
 
-
             st.markdown("<div style='margin-top:14px;'>", unsafe_allow_html=True)
             run = st.button("✨ Analyze Match", use_container_width=True, key="analyze_btn", type="primary")
             st.markdown("</div>", unsafe_allow_html=True)
-
 
     with right:
         with st.container(border=True):
             st.markdown("<div class='inside-box-title'>Match Score</div>", unsafe_allow_html=True)
 
             if run:
-                if not st.session_state.cv_bytes or not st.session_state.cv_name:
+                if not st.session_state.candidate_name.strip():
+                    st.error("Please enter your full name.")
+                elif not st.session_state.candidate_email.strip():
+                    st.error("Please enter your email address.")
+                elif not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", st.session_state.candidate_email):
+                    st.error("Please enter a valid email address.")
+                elif not st.session_state.cv_bytes or not st.session_state.cv_name:
                     st.error("Upload a CV first.")
                 else:
                     cv_data = analyze_cv(st.session_state.cv_name, st.session_state.cv_bytes)
@@ -666,6 +719,16 @@ def page_dashboard():
                         top_result = match_results[0]
                         p = max(0, min(100, int(top_result["final_score"])))
 
+                        email_sent = False
+                        if top_result["final_score"] >= 60:
+                            email_sent = send_interview_email(
+                                to_email=st.session_state.candidate_email,
+                                candidate_name=st.session_state.candidate_name,
+                                score=top_result["final_score"],
+                                job_title=top_result["title"],
+                                company=top_result["company"]
+                            )
+
                         st.markdown(
                             f"""
                             <div class="ring" style="--p:{p}%;">
@@ -680,6 +743,18 @@ def page_dashboard():
                             """,
                             unsafe_allow_html=True
                         )
+
+                        if top_result["final_score"] >= 60:
+                            if email_sent:
+                                st.success(
+                                    f"Congratulations {st.session_state.candidate_name}! "
+                                    f"Your score is above 60%, and an interview email has been sent to "
+                                    f"{st.session_state.candidate_email}."
+                                )
+                            else:
+                                st.warning("Your score is above 60%, but the email could not be sent.")
+                        else:
+                            st.info("Your score is below 60%, so no interview email was sent.")
 
                         st.markdown("<div class='inside-box-title'>Top Recommended Jobs</div>", unsafe_allow_html=True)
 
@@ -766,7 +841,6 @@ def page_dashboard():
                     """,
                     unsafe_allow_html=True
                 )
-
 
 
 
