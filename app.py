@@ -67,22 +67,17 @@ AI Match Recruitment Team
     msg["Subject"] = subject
     msg.attach(MIMEText(body, "plain"))
 
-try:
-    server = smtplib.SMTP("smtp.gmail.com", 587)
-    server.ehlo()
-    server.starttls()
-    server.ehlo()
-
-    server.login(sender_email, sender_password)
-
-    server.send_message(msg)
-
-    server.quit()
-
-    return True, None
-
-except Exception as e:
-    return False, str(e)
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
+        server.login(sender_email, sender_password)
+        server.send_message(msg)
+        server.quit()
+        return True, None
+    except Exception as e:
+        return False, str(e)
 
 
 
