@@ -68,15 +68,16 @@ AI Match Recruitment Team
     msg.attach(MIMEText(body, "plain"))
 
     try:
-        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=20)
+        server.ehlo()
         server.starttls()
+        server.ehlo()
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, to_email, msg.as_string())
         server.quit()
-        return True
+        return True, None
     except Exception as e:
-        print("Email sending failed:", e)
-        return False
+        return False, str(e)
 
 
 
