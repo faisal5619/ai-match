@@ -721,8 +721,10 @@ def page_dashboard():
                         p = max(0, min(100, int(top_result["final_score"])))
 
                         email_sent = False
+                        email_error = None
+
                         if top_result["final_score"] >= 60:
-                            email_sent = send_interview_email(
+                            email_sent, email_error = send_interview_email(
                                 to_email=st.session_state.candidate_email,
                                 candidate_name=st.session_state.candidate_name,
                                 score=top_result["final_score"],
@@ -753,7 +755,7 @@ def page_dashboard():
                                     f"{st.session_state.candidate_email}."
                                 )
                             else:
-                                st.warning("Your score is above 60%, but the email could not be sent.")
+                                st.error(f"Email failed: {email_error}")
                         else:
                             st.info("Your score is below 60%, so no interview email was sent.")
 
@@ -842,8 +844,6 @@ def page_dashboard():
                     """,
                     unsafe_allow_html=True
                 )
-
-
 
 
 
