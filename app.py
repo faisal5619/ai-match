@@ -771,14 +771,31 @@ def page_dashboard():
 
                         email_sent = False
                         email_error = None
+                        recruitment_sent = False
+                        recruitment_error = None
 
                         if top_result["final_score"] >= 60:
+
+                            # send email to candidate
                             email_sent, email_error = send_interview_email(
                                 to_email=st.session_state.candidate_email,
                                 candidate_name=st.session_state.candidate_name,
                                 score=top_result["final_score"],
                                 job_title=top_result["title"],
                                 company=top_result["company"]
+                            )
+
+                            # send email to recruitment company
+                            recruitment_sent, recruitment_error = send_recruitment_email(
+                                to_email=st.secrets["RECRUITMENT_EMAIL"],
+                                candidate_name=st.session_state.candidate_name,
+                                candidate_email=st.session_state.candidate_email,
+                                score=top_result["final_score"],
+                                job_title=top_result["title"],
+                                company=top_result["company"],
+                                matched_skills=top_result["matched_skills"],
+                                missing_skills=top_result["missing_skills"],
+                                cv_name=st.session_state.cv_name
                             )
 
                         st.markdown(
