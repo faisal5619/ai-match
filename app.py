@@ -79,6 +79,55 @@ AI Match Recruitment Team
     except Exception as e:
         return False, str(e)
 
+def send_recruitment_email(to_email, candidate_name, candidate_email, score, job_title, company, matched_skills, missing_skills, cv_name):
+    sender_email = st.secrets["EMAIL_ADDRESS"]
+    sender_password = st.secrets["EMAIL_PASSWORD"]
+
+    subject = "New Shortlisted Candidate - AI Match"
+
+    matched_text = ", ".join(matched_skills) if matched_skills else "None"
+    missing_text = ", ".join(missing_skills) if missing_skills else "None"
+
+    body = f"""
+Dear Recruitment Team,
+
+A new candidate has been shortlisted through AI Match.
+
+Candidate Name: {candidate_name}
+Candidate Email: {candidate_email}
+CV File: {cv_name}
+
+Job Title: {job_title}
+Company: {company}
+Match Score: {score:.2f}%
+
+Matched Skills: {matched_text}
+Missing Skills: {missing_text}
+
+Please review the candidate for the next recruitment stage.
+
+Best regards,
+AI Match System
+"""
+
+    msg = MIMEMultipart()
+    msg["From"] = sender_email
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain"))
+
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
+        server.login(sender_email, sender_password)
+        server.send_message(msg)
+        server.quit()
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
 
 
 # ---------------- CSS ----------------
