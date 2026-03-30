@@ -525,7 +525,7 @@ def compute_all(cv_text: str, jd_text: str):
     return final, sim, sk, matched, missing
 
 # ---------------- NAV / ROUTING ----------------
-PAGES = ["Home", "Dashboard", "About", "Contact"]
+PAGES = ["Home", "Dashboards", "About", "Contact"]
 
 if "page" not in st.session_state:
     st.session_state.page = "Home"
