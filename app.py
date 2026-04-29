@@ -14,7 +14,7 @@ from agents.job_agent import load_jobs
 from agents.match_agent import analyze_all_jobs
 from agents.recommendation_agent import generate_recommendations
 from database.db import init_db, insert_resume, insert_match
-from auth_db import init_auth_db, register_user, login_user, save_user_cv, load_user_cv
+from auth_db import init_auth_db, register_user, login_user, save_user_cv, load_user_cv, delete_user_cv, load_user_profile, save_user_profile
 
 # ---------------- INIT DB ----------------
 init_db()
@@ -652,7 +652,7 @@ if not st.session_state.logged_in:
 # ════════════════════════════════════════════════════════════════════════════
 #  NAV / ROUTING  (only reached when logged in)
 # ════════════════════════════════════════════════════════════════════════════
-PAGES = ["Home", "Dashboard", "About", "Contact"]
+PAGES = ["Home", "Dashboard", "Profile", "About", "Contact"]
 
 qp = st.query_params.get("page")
 if qp in PAGES:
@@ -683,7 +683,7 @@ with col1:
 
 with col2:
     st.markdown('<div class="navlinks">', unsafe_allow_html=True)
-    b1, b2, b3, b4, b5 = st.columns(5, vertical_alignment="center")
+    b1, b2, b3, b4, b5, b6 = st.columns(6, vertical_alignment="center")
 
     def nav_btn(col, label, target):
         with col:
@@ -695,11 +695,12 @@ with col2:
 
     nav_btn(b1, "⌂ Home", "Home")
     nav_btn(b2, "⌘ Dashboard", "Dashboard")
-    nav_btn(b3, "ⓘ About", "About")
-    nav_btn(b4, "✉ Contact", "Contact")
+    nav_btn(b3, "👤 Profile", "Profile")
+    nav_btn(b4, "ⓘ About", "About")
+    nav_btn(b5, "✉ Contact", "Contact")
 
     # Logout button in navbar
-    with b5:
+    with b6:
         first_name = st.session_state.user_name.split()[0] if st.session_state.user_name else "User"
         if st.button(f"👤 {first_name}  ·  Logout", use_container_width=True, key="nav_logout"):
             st.session_state.logged_in = False
@@ -1047,6 +1048,160 @@ def page_contact():
     st.markdown("</div>", unsafe_allow_html=True)
 
 
+
+
+def page_profile():
+    st.markdown('<div class="wrap">', unsafe_allow_html=True)
+    st.markdown("<div class='title' style='font-size:40px;'>My Profile</div>", unsafe_allow_html=True)
+    st.markdown("<div class='subtitle'>Manage your personal info, job preferences, and saved CV.</div>", unsafe_allow_html=True)
+
+    email = st.session_state.user_email
+    profile = load_user_profile(email)
+
+    left, right = st.columns([1, 1], gap="large")
+
+    # ── LEFT: Basic Info + Job Preferences ──
+    with left:
+        with st.container(border=True):
+            st.markdown('<div class="inside-box-title">👤 Basic Information</div>', unsafe_allow_html=True)
+
+            new_name  = st.text_input("Full Name", value=profile["full_name"], key="prof_name")
+            st.text_input("Email Address", value=email, disabled=True, key="prof_email")
+
+            st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+            st.markdown('<div class="inside-box-title" style="margin-top:16px;">💼 Job Preferences</div>', unsafe_allow_html=True)
+
+            location_options = ["", "Riyadh", "Jeddah", "Abha", "Dammam", "Medina", "Remote", "Any"]
+            loc_index = location_options.index(profile["preferred_location"]) if profile["preferred_location"] in location_options else 0
+            new_location = st.selectbox(
+                "Preferred Job Location",
+                options=location_options,
+                index=loc_index,
+                key="prof_location",
+                format_func=lambda x: "Select a location..." if x == "" else x
+            )
+
+            job_type_options = ["", "Full-time", "Part-time", "Internship", "Remote", "Freelance"]
+            jt_index = job_type_options.index(profile["job_type"]) if profile["job_type"] in job_type_options else 0
+            new_job_type = st.selectbox(
+                "Preferred Job Type",
+                options=job_type_options,
+                index=jt_index,
+                key="prof_job_type",
+                format_func=lambda x: "Select a job type..." if x == "" else x
+            )
+
+            field_options = ["", "Artificial Intelligence", "Web Development", "Data Science", "Cybersecurity",
+                             "Mobile Development", "Cloud Computing", "Software Engineering", "DevOps", "Other"]
+            fi_index = field_options.index(profile["field_of_interest"]) if profile["field_of_interest"] in field_options else 0
+            new_field = st.selectbox(
+                "Field of Interest",
+                options=field_options,
+                index=fi_index,
+                key="prof_field",
+                format_func=lambda x: "Select a field..." if x == "" else x
+            )
+
+            st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
+            if st.button("💾 Save Profile", key="save_profile_btn", type="primary", use_container_width=True):
+                if not new_name.strip():
+                    st.error("Full name cannot be empty.")
+                else:
+                    save_user_profile(email, new_name, new_location, new_job_type, new_field)
+                    st.session_state.user_name = new_name
+                    st.toast("Profile saved successfully!", icon="✅")
+                    st.rerun()
+
+    # ── RIGHT: CV Management ──
+    with right:
+        with st.container(border=True):
+            st.markdown('<div class="inside-box-title">📄 My CV</div>', unsafe_allow_html=True)
+
+            saved_name, saved_bytes = load_user_cv(email)
+
+            if saved_name:
+                st.markdown(
+                    f"""
+                    <div style="padding:16px; background:#DCFCE7; border:1px solid rgba(22,163,74,0.20);
+                                border-radius:14px; margin-bottom:16px;">
+                        <div style="font-weight:900; color:#166534; font-size:15px; margin-bottom:4px;">✅ CV Saved</div>
+                        <div style="color:#166534; font-size:13px;">📎 {saved_name}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+                col_replace, col_delete = st.columns(2)
+                with col_replace:
+                    st.markdown("<div style='font-weight:700; font-size:13px; color:#475569; margin-bottom:6px;'>Replace CV</div>", unsafe_allow_html=True)
+                    new_cv = st.file_uploader("Replace", type=["pdf", "docx", "txt"], key="profile_cv_upload", label_visibility="collapsed")
+                    if new_cv is not None:
+                        new_bytes = new_cv.read()
+                        save_user_cv(email, new_cv.name, new_bytes)
+                        st.session_state.cv_name = new_cv.name
+                        st.session_state.cv_bytes = new_bytes
+                        st.session_state.cv_loaded_from_db = False
+                        st.toast("CV updated successfully!", icon="✅")
+                        st.rerun()
+
+                with col_delete:
+                    st.markdown("<div style='font-weight:700; font-size:13px; color:#475569; margin-bottom:6px;'>Remove CV</div>", unsafe_allow_html=True)
+                    if st.button("🗑️ Delete CV", key="delete_cv_btn", use_container_width=True):
+                        delete_user_cv(email)
+                        st.session_state.cv_name = None
+                        st.session_state.cv_bytes = None
+                        st.session_state.cv_loaded_from_db = False
+                        st.toast("CV deleted.", icon="🗑️")
+                        st.rerun()
+
+            else:
+                st.markdown(
+                    """
+                    <div style="padding:20px; background:#F1F5F9; border-radius:14px; text-align:center; margin-bottom:16px;">
+                        <div style="font-size:32px; margin-bottom:8px;">📭</div>
+                        <div style="font-weight:800; color:#475569; margin-bottom:4px;">No CV saved yet</div>
+                        <div style="font-size:13px; color:#94A3B8;">Upload your CV from the Dashboard or below</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                new_cv = st.file_uploader("Upload your CV", type=["pdf", "docx", "txt"], key="profile_cv_upload")
+                if new_cv is not None:
+                    new_bytes = new_cv.read()
+                    save_user_cv(email, new_cv.name, new_bytes)
+                    st.session_state.cv_name = new_cv.name
+                    st.session_state.cv_bytes = new_bytes
+                    st.session_state.cv_loaded_from_db = False
+                    st.toast("CV uploaded and saved!", icon="✅")
+                    st.rerun()
+
+        # Profile summary card
+        st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown('<div class="inside-box-title">📋 Profile Summary</div>', unsafe_allow_html=True)
+            items = [
+                ("Name", profile["full_name"] or "—"),
+                ("Email", email),
+                ("Location", profile["preferred_location"] or "—"),
+                ("Job Type", profile["job_type"] or "—"),
+                ("Field", profile["field_of_interest"] or "—"),
+                ("CV", saved_name if saved_name else "—"),
+            ]
+            for label, value in items:
+                st.markdown(
+                    f"""
+                    <div style="display:flex; justify-content:space-between; padding:10px 0;
+                                border-bottom:1px solid rgba(15,23,42,0.06); font-size:14px;">
+                        <span style="color:#64748B; font-weight:700;">{label}</span>
+                        <span style="color:#0F172A; font-weight:800;">{value}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
 # ════════════════════════════════════════════════════════════════════════════
 #  ROUTER
 # ════════════════════════════════════════════════════════════════════════════
@@ -1054,6 +1209,8 @@ if st.session_state.page == "Home":
     page_home()
 elif st.session_state.page == "Dashboard":
     page_dashboard()
+elif st.session_state.page == "Profile":
+    page_profile()
 elif st.session_state.page == "About":
     page_about()
 elif st.session_state.page == "Contact":
