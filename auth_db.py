@@ -37,10 +37,17 @@ def init_auth_db():
             preferred_location TEXT DEFAULT '',
             job_type TEXT DEFAULT '',
             field_of_interest TEXT DEFAULT '',
+            github_username TEXT DEFAULT '',
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (email) REFERENCES users(email)
         )
     """)
+    # Add github_username column if it doesn't exist (for existing databases)
+    try:
+        c.execute("ALTER TABLE user_profiles ADD COLUMN github_username TEXT DEFAULT ''")
+        conn.commit()
+    except Exception:
+        pass
     conn.commit()
     conn.close()
 
@@ -129,7 +136,7 @@ def load_user_profile(email: str):
     conn = get_connection()
     c = conn.cursor()
     c.execute(
-        "SELECT full_name, preferred_location, job_type, field_of_interest FROM user_profiles WHERE email = ?",
+        "SELECT full_name, preferred_location, job_type, field_of_interest, github_username FROM user_profiles WHERE email = ?",
         (email.strip().lower(),)
     )
     row = c.fetchone()
@@ -140,27 +147,73 @@ def load_user_profile(email: str):
             "preferred_location": row[1] or "",
             "job_type": row[2] or "",
             "field_of_interest": row[3] or "",
+            "github_username": row[4] or "",
         }
     return {
         "full_name": "",
         "preferred_location": "",
         "job_type": "",
         "field_of_interest": "",
+        "github_username": "",
     }
 
 
-def save_user_profile(email: str, full_name: str, preferred_location: str, job_type: str, field_of_interest: str):
+def save_user_profile(email: str, full_name: str, preferred_location: str, job_type: str, field_of_interest: str, github_username: str = ""):
     conn = get_connection()
     c = conn.cursor()
     c.execute("""
-        INSERT INTO user_profiles (email, full_name, preferred_location, job_type, field_of_interest, updated_at)
-        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        INSERT INTO user_profiles (email, full_name, preferred_location, job_type, field_of_interest, github_username, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         ON CONFLICT(email) DO UPDATE SET
             full_name = excluded.full_name,
             preferred_location = excluded.preferred_location,
             job_type = excluded.job_type,
             field_of_interest = excluded.field_of_interest,
+            github_username = excluded.github_username,
             updated_at = CURRENT_TIMESTAMP
-    """, (email.strip().lower(), full_name.strip(), preferred_location, job_type, field_of_interest))
+    """, (email.strip().lower(), full_name.strip(), preferred_location, job_type, field_of_interest, github_username.strip()))
     conn.commit()
     conn.close()
+
+
+def fetch_github_skills(github_username: str) -> list:
+    """
+    Fetches public repos from GitHub API and extracts programming languages.
+    Returns a list of skill strings. Completely free, no auth needed.
+    """
+    if not github_username.strip():
+        return []
+    try:
+        import requests
+        url = f"https://api.github.com/users/{github_username.strip()}/repos?per_page=30&sort=updated"
+        headers = {"Accept": "application/vnd.github.v3+json", "User-Agent": "AI-Match-App"}
+        r = requests.get(url, headers=headers, timeout=8)
+        if r.status_code != 200:
+            return []
+        repos = r.json()
+        languages = set()
+        topics = set()
+        for repo in repos:
+            if repo.get("language"):
+                languages.add(repo["language"].lower())
+            for topic in repo.get("topics", []):
+                topics.add(topic.lower())
+        # Map to skills the system understands
+        skill_map = {
+            "python": "python", "javascript": "javascript", "typescript": "typescript",
+            "java": "java", "html": "html", "css": "css", "sql": "sql",
+            "shell": "linux", "dockerfile": "docker", "react": "react",
+            "jupyter notebook": "data analysis", "r": "data analysis",
+        }
+        found = []
+        for lang in languages:
+            if lang in skill_map:
+                found.append(skill_map[lang])
+            else:
+                found.append(lang)
+        for topic in topics:
+            if topic in skill_map:
+                found.append(skill_map[topic])
+        return list(set(found))
+    except Exception:
+        return []
