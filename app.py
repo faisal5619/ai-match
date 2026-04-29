@@ -831,6 +831,41 @@ def page_dashboard():
     left, right = st.columns([1, 1], gap="large")
 
     with left:
+        # ── Quick Preferences ──
+        with st.container(border=True):
+            st.markdown('<div style="font-size:18px; font-weight:900; margin-bottom:12px; color:#0F172A;">⚡ Job Preferences</div>', unsafe_allow_html=True)
+            st.markdown('<div style="font-size:12px; color:#64748B; margin-bottom:10px;">Adjust your preferences to improve match results</div>', unsafe_allow_html=True)
+
+            dash_prefs = load_user_profile(st.session_state.user_email)
+
+            location_options = ["", "Riyadh", "Jeddah", "Abha", "Dammam", "Medina", "Remote", "Any"]
+            loc_index = location_options.index(dash_prefs["preferred_location"]) if dash_prefs["preferred_location"] in location_options else 0
+
+            job_type_options = ["", "Full-time", "Part-time", "Internship", "Remote", "Freelance"]
+            jt_index = job_type_options.index(dash_prefs["job_type"]) if dash_prefs["job_type"] in job_type_options else 0
+
+            field_options = ["", "Artificial Intelligence", "Web Development", "Data Science", "Cybersecurity",
+                             "Mobile Development", "Cloud Computing", "Software Engineering", "DevOps", "Other"]
+            fi_index = field_options.index(dash_prefs["field_of_interest"]) if dash_prefs["field_of_interest"] in field_options else 0
+
+            pc1, pc2, pc3 = st.columns(3)
+            with pc1:
+                dash_location = st.selectbox("📍 Location", location_options, index=loc_index,
+                    key="dash_location", format_func=lambda x: "Any" if x == "" else x)
+            with pc2:
+                dash_job_type = st.selectbox("💼 Job Type", job_type_options, index=jt_index,
+                    key="dash_job_type", format_func=lambda x: "Any" if x == "" else x)
+            with pc3:
+                dash_field = st.selectbox("🎯 Field", field_options, index=fi_index,
+                    key="dash_field", format_func=lambda x: "Any" if x == "" else x)
+
+            if st.button("Save Preferences", key="dash_save_prefs", use_container_width=True):
+                save_user_profile(st.session_state.user_email, dash_prefs["full_name"], dash_location, dash_job_type, dash_field)
+                st.toast("Preferences saved!", icon="✅")
+                st.rerun()
+
+        st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+
         with st.container(border=True):
             st.markdown('<div style="font-size:18px; font-weight:900; margin-bottom:12px; color:#0F172A;">Upload CV</div>', unsafe_allow_html=True)
 
