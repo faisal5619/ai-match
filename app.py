@@ -14,7 +14,7 @@ from agents.job_agent import load_jobs
 from agents.match_agent import analyze_all_jobs
 from agents.recommendation_agent import generate_recommendations
 from database.db import init_db, insert_resume, insert_match
-from auth_db import init_auth_db, register_user, login_user, save_user_cv, load_user_cv, delete_user_cv, load_user_profile, save_user_profile
+from auth_db import init_auth_db, register_user, login_user, save_user_cv, load_user_cv, delete_user_cv, load_user_profile, save_user_profile, fetch_github_skills
 
 # ---------------- INIT DB ----------------
 init_db()
@@ -921,6 +921,20 @@ def page_dashboard():
                     st.error("Upload a CV first.")
                 else:
                     cv_data = analyze_cv(st.session_state.cv_name, st.session_state.cv_bytes)
+
+                    # ── Enrich skills with GitHub ──
+                    github_username = load_user_profile(st.session_state.user_email).get("github_username", "")
+                    if github_username.strip():
+                        with st.spinner("🐙 Fetching your GitHub skills..."):
+                            github_skills = fetch_github_skills(github_username)
+                        if github_skills:
+                            # Merge GitHub skills into CV skills
+                            merged_skills = list(set(cv_data["skills"] + github_skills))
+                            cv_data["skills"] = merged_skills
+                            # Also append to text for TF-IDF matching
+                            cv_data["text"] += " " + " ".join(github_skills)
+                            st.toast(f"🐙 Added {len(github_skills)} skills from GitHub!", icon="✅")
+
                     resume_id = insert_resume(st.session_state.cv_name, cv_data["text"], cv_data["skills"])
                     jobs = load_jobs()
                     match_results = analyze_all_jobs(cv_data, jobs)
@@ -987,6 +1001,13 @@ def page_dashboard():
                         pills_html = " ".join([f'<span class="big-pill" style="font-size:12px;padding:6px 12px;">{p}</span>' for p in active_prefs])
                         st.markdown(
                             f'<div style="margin-bottom:12px;"><div style="font-size:12px;font-weight:700;color:#64748B;margin-bottom:6px;">Applied preferences:</div>{pills_html}</div>',
+                            unsafe_allow_html=True
+                        )
+
+                    if github_username.strip() and github_skills:
+                        gh_pills = " ".join([f'<span class="chip chip-green">{s}</span>' for s in github_skills[:8]])
+                        st.markdown(
+                            f'<div style="margin-bottom:14px;"><div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:6px;">🐙 Skills from GitHub:</div>{gh_pills}</div>',
                             unsafe_allow_html=True
                         )
 
@@ -1164,6 +1185,13 @@ def page_profile():
 
             new_name  = st.text_input("Full Name", value=profile["full_name"], key="prof_name")
             st.text_input("Email Address", value=email, disabled=True, key="prof_email")
+            new_github = st.text_input("GitHub Username", value=profile.get("github_username", ""),
+                key="prof_github", placeholder="e.g. faisal5619")
+            if new_github.strip():
+                st.markdown(
+                    f'<div style="font-size:12px; color:#2563EB; margin-top:-8px; margin-bottom:4px;">🔗 github.com/{new_github.strip()}</div>',
+                    unsafe_allow_html=True
+                )
 
             st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
             st.markdown('<div class="inside-box-title" style="margin-top:16px;">💼 Job Preferences</div>', unsafe_allow_html=True)
@@ -1205,7 +1233,7 @@ def page_profile():
                 if not new_name.strip():
                     st.error("Full name cannot be empty.")
                 else:
-                    save_user_profile(email, new_name, new_location, new_job_type, new_field)
+                    save_user_profile(email, new_name, new_location, new_job_type, new_field, new_github)
                     st.session_state.user_name = new_name
                     st.toast("Profile saved successfully!", icon="✅")
                     st.rerun()
@@ -1277,9 +1305,11 @@ def page_profile():
         st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
         with st.container(border=True):
             st.markdown('<div class="inside-box-title">📋 Profile Summary</div>', unsafe_allow_html=True)
+            gh = profile.get("github_username", "")
             items = [
                 ("Name", profile["full_name"] or "—"),
                 ("Email", email),
+                ("GitHub", f"@{gh}" if gh else "—"),
                 ("Location", profile["preferred_location"] or "—"),
                 ("Job Type", profile["job_type"] or "—"),
                 ("Field", profile["field_of_interest"] or "—"),
