@@ -683,7 +683,7 @@ with col1:
 
 with col2:
     st.markdown('<div class="navlinks">', unsafe_allow_html=True)
-    b1, b2, b3, b4, b5, b6 = st.columns(6, vertical_alignment="center")
+    b1, b2, b3, b4, b5 = st.columns(5, vertical_alignment="center")
 
     def nav_btn(col, label, target):
         with col:
@@ -695,23 +695,30 @@ with col2:
 
     nav_btn(b1, "⌂ Home", "Home")
     nav_btn(b2, "⌘ Dashboard", "Dashboard")
-    nav_btn(b3, "👤 Profile", "Profile")
-    nav_btn(b4, "ⓘ About", "About")
-    nav_btn(b5, "✉ Contact", "Contact")
+    nav_btn(b3, "ⓘ About", "About")
+    nav_btn(b4, "✉ Contact", "Contact")
 
-    # Logout button in navbar
-    with b6:
-        first_name = st.session_state.user_name.split()[0] if st.session_state.user_name else "User"
-        if st.button(f"👤 {first_name}  ·  Logout", use_container_width=True, key="nav_logout"):
-            st.session_state.logged_in = False
-            st.session_state.user_name = ""
-            st.session_state.user_email = ""
-            st.session_state.page = "Home"
-            st.session_state.auth_tab = "login"
-            st.session_state.cv_name = None
-            st.session_state.cv_bytes = None
-            st.session_state.cv_loaded_from_db = False
-            st.rerun()
+    # Profile + Logout in b5
+    with b5:
+        pb1, pb2 = st.columns(2)
+        with pb1:
+            cls = "active" if st.session_state.page == "Profile" else ""
+            st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
+            if st.button("👤 Profile", use_container_width=True, key="nav_Profile"):
+                set_page("Profile")
+            st.markdown("</div>", unsafe_allow_html=True)
+        with pb2:
+            first_name = st.session_state.user_name.split()[0] if st.session_state.user_name else "User"
+            if st.button(f"⎋ Logout", use_container_width=True, key="nav_logout"):
+                st.session_state.logged_in = False
+                st.session_state.user_name = ""
+                st.session_state.user_email = ""
+                st.session_state.page = "Home"
+                st.session_state.auth_tab = "login"
+                st.session_state.cv_name = None
+                st.session_state.cv_bytes = None
+                st.session_state.cv_loaded_from_db = False
+                st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
