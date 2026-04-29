@@ -14,7 +14,7 @@ from agents.job_agent import load_jobs
 from agents.match_agent import analyze_all_jobs
 from agents.recommendation_agent import generate_recommendations
 from database.db import init_db, insert_resume, insert_match
-from auth_db import init_auth_db, register_user, login_user
+from auth_db import init_auth_db, register_user, login_user, save_user_cv, load_user_cv
 
 # ---------------- INIT DB ----------------
 init_db()
@@ -34,6 +34,8 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "user_name" not in st.session_state:
     st.session_state.user_name = ""
+if "user_email" not in st.session_state:
+    st.session_state.user_email = ""
 if "auth_tab" not in st.session_state:
     st.session_state.auth_tab = "login"
 if "page" not in st.session_state:
@@ -585,6 +587,8 @@ def page_auth():
                     if ok:
                         st.session_state.logged_in = True
                         st.session_state.user_name = result
+                        st.session_state.user_email = login_email.strip().lower()
+                        st.session_state.cv_loaded_from_db = False
                         st.rerun()
                     else:
                         st.error(result)
@@ -700,8 +704,12 @@ with col2:
         if st.button(f"👤 {first_name}  ·  Logout", use_container_width=True, key="nav_logout"):
             st.session_state.logged_in = False
             st.session_state.user_name = ""
+            st.session_state.user_email = ""
             st.session_state.page = "Home"
             st.session_state.auth_tab = "login"
+            st.session_state.cv_name = None
+            st.session_state.cv_bytes = None
+            st.session_state.cv_loaded_from_db = False
             st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
@@ -801,6 +809,7 @@ def page_dashboard():
     st.markdown("<div class='title' style='font-size:40px;'>CV Analysis Dashboard</div>", unsafe_allow_html=True)
     st.markdown("<div class='subtitle' style='font-size:17px;'>Upload your CV and let the system automatically find the best matching jobs for you.</div>", unsafe_allow_html=True)
 
+    # ── Session defaults ──
     if "cv_name" not in st.session_state:
         st.session_state.cv_name = None
     if "cv_bytes" not in st.session_state:
@@ -809,6 +818,16 @@ def page_dashboard():
         st.session_state.candidate_name = st.session_state.user_name
     if "candidate_email" not in st.session_state:
         st.session_state.candidate_email = ""
+    if "cv_loaded_from_db" not in st.session_state:
+        st.session_state.cv_loaded_from_db = False
+
+    # ── Auto-load saved CV from DB on first visit ──
+    if not st.session_state.cv_loaded_from_db:
+        saved_name, saved_bytes = load_user_cv(st.session_state.user_email)
+        if saved_name and saved_bytes:
+            st.session_state.cv_name = saved_name
+            st.session_state.cv_bytes = saved_bytes
+        st.session_state.cv_loaded_from_db = True
 
     left, right = st.columns([1, 1], gap="large")
 
@@ -827,14 +846,23 @@ def page_dashboard():
             )
 
             if up is not None:
+                new_bytes = up.read()
                 st.session_state.cv_name = up.name
-                st.session_state.cv_bytes = up.read()
+                st.session_state.cv_bytes = new_bytes
+                # Save new CV to database immediately
+                save_user_cv(st.session_state.user_email, up.name, new_bytes)
+                st.toast("CV saved to your account!", icon="✅")
 
             if st.session_state.cv_name:
+                # Show green banner if loaded from DB, white if just uploaded
+                is_saved = st.session_state.cv_loaded_from_db and up is None
+                banner_bg = "#DCFCE7" if is_saved else "white"
+                banner_border = "rgba(22,163,74,0.20)" if is_saved else "rgba(15,23,42,0.08)"
+                banner_label = "💾 Saved CV: " if is_saved else "📄 Uploaded CV: "
                 st.markdown(
                     f"""
-                    <div style="margin-top:10px; margin-bottom:14px; padding:12px 14px; background:white; border:1px solid rgba(15,23,42,0.08); border-radius:14px; font-weight:700; color:#0F172A;">
-                        Uploaded CV: {st.session_state.cv_name}
+                    <div style="margin-top:10px; margin-bottom:14px; padding:12px 14px; background:{banner_bg}; border:1px solid {banner_border}; border-radius:14px; font-weight:700; color:#0F172A;">
+                        {banner_label}{st.session_state.cv_name}
                     </div>
                     """,
                     unsafe_allow_html=True
