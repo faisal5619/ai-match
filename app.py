@@ -889,7 +889,71 @@ def page_dashboard():
                     resume_id = insert_resume(st.session_state.cv_name, cv_data["text"], cv_data["skills"])
                     jobs = load_jobs()
                     match_results = analyze_all_jobs(cv_data, jobs)
+
+                    # ── Apply preference boosts ──
+                    prefs = load_user_profile(st.session_state.user_email)
+                    pref_location = prefs.get("preferred_location", "").lower().strip()
+                    pref_job_type = prefs.get("job_type", "").lower().strip()
+                    pref_field    = prefs.get("field_of_interest", "").lower().strip()
+
+                    FIELD_KEYWORDS = {
+                        "artificial intelligence": ["ai", "artificial intelligence", "machine learning", "nlp", "deep learning"],
+                        "web development": ["web", "frontend", "backend", "html", "css", "javascript", "react"],
+                        "data science": ["data", "analyst", "analytics", "sql", "python", "visualization"],
+                        "cybersecurity": ["security", "cyber", "penetration", "firewall", "soc"],
+                        "mobile development": ["mobile", "android", "ios", "flutter", "swift"],
+                        "cloud computing": ["cloud", "aws", "azure", "devops", "kubernetes"],
+                        "software engineering": ["software", "developer", "engineer", "programming"],
+                        "devops": ["devops", "ci/cd", "docker", "kubernetes", "pipeline"],
+                    }
+
+                    def preference_boost(result):
+                        score = result["final_score"]
+                        job_text = (result.get("title","") + " " + result.get("description","") + " " + result.get("location","")).lower()
+
+                        # Location boost: +10 if matches
+                        if pref_location and pref_location not in ["any", "remote", ""]:
+                            if pref_location in job_text:
+                                score += 10
+
+                        # Job type boost: +8 if matches
+                        if pref_job_type and pref_job_type not in [""]:
+                            if pref_job_type in job_text:
+                                score += 8
+
+                        # Field boost: +12 if keyword matches
+                        if pref_field:
+                            keywords = FIELD_KEYWORDS.get(pref_field.lower(), [pref_field])
+                            if any(kw in job_text for kw in keywords):
+                                score += 12
+
+                        return min(score, 100)  # cap at 100
+
+                    if pref_location or pref_job_type or pref_field:
+                        for r in match_results:
+                            r["boosted_score"] = preference_boost(r)
+                        match_results.sort(key=lambda x: x["boosted_score"], reverse=True)
+                    else:
+                        for r in match_results:
+                            r["boosted_score"] = r["final_score"]
+
                     recommendations = generate_recommendations(match_results, top_n=3)
+
+                    # Show active preferences as pills
+                    active_prefs = []
+                    if pref_location and pref_location != "any":
+                        active_prefs.append(f"📍 {prefs['preferred_location']}")
+                    if pref_job_type:
+                        active_prefs.append(f"💼 {prefs['job_type']}")
+                    if pref_field:
+                        active_prefs.append(f"🎯 {prefs['field_of_interest']}")
+
+                    if active_prefs:
+                        pills_html = " ".join([f'<span class="big-pill" style="font-size:12px;padding:6px 12px;">{p}</span>' for p in active_prefs])
+                        st.markdown(
+                            f'<div style="margin-bottom:12px;"><div style="font-size:12px;font-weight:700;color:#64748B;margin-bottom:6px;">Applied preferences:</div>{pills_html}</div>',
+                            unsafe_allow_html=True
+                        )
 
                     if match_results:
                         top_result = match_results[0]
