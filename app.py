@@ -494,6 +494,22 @@ st.markdown(
         height: 1px;
         background: rgba(15,23,42,0.08);
     }}
+
+    /* Auth tab buttons — override default secondary style */
+    [data-testid="column"] button[kind="secondary"] {{
+        background: #F1F5F9 !important;
+        color: #64748B !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-weight: 800 !important;
+        border-radius: 12px !important;
+    }}
+    [data-testid="column"] button[kind="secondary"]:hover {{
+        background: #E2E8F0 !important;
+        color: #475569 !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }}
     </style>
     """,
     unsafe_allow_html=True
@@ -520,29 +536,25 @@ def page_auth():
             unsafe_allow_html=True
         )
 
-        # Visual tab indicator
-        login_cls = "auth-tab active" if st.session_state.auth_tab == "login" else "auth-tab"
-        reg_cls   = "auth-tab active" if st.session_state.auth_tab == "register" else "auth-tab"
-        st.markdown(
-            f"""
-            <div class="auth-tabs">
-                <div class="{login_cls}">Sign In</div>
-                <div class="{reg_cls}">Create Account</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        # Clickable tab buttons
+        # Tab switcher — clean single row
+        login_active = st.session_state.auth_tab == "login"
         tc1, tc2 = st.columns(2)
         with tc1:
-            if st.button("Sign In", key="tab_login", use_container_width=True,
-                         type="primary" if st.session_state.auth_tab == "login" else "secondary"):
+            if st.button(
+                "Sign In",
+                key="tab_login",
+                use_container_width=True,
+                type="primary" if login_active else "secondary"
+            ):
                 st.session_state.auth_tab = "login"
                 st.rerun()
         with tc2:
-            if st.button("Create Account", key="tab_reg", use_container_width=True,
-                         type="primary" if st.session_state.auth_tab == "register" else "secondary"):
+            if st.button(
+                "Create Account",
+                key="tab_reg",
+                use_container_width=True,
+                type="primary" if not login_active else "secondary"
+            ):
                 st.session_state.auth_tab = "register"
                 st.rerun()
 
