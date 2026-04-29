@@ -816,7 +816,7 @@ def page_dashboard():
     if "candidate_name" not in st.session_state:
         st.session_state.candidate_name = st.session_state.user_name
     if "candidate_email" not in st.session_state:
-        st.session_state.candidate_email = ""
+        st.session_state.candidate_email = st.session_state.user_email
     if "cv_loaded_from_db" not in st.session_state:
         st.session_state.cv_loaded_from_db = False
 
