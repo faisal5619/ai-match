@@ -14,23 +14,14 @@ from agents.job_agent import load_jobs
 from agents.match_agent import analyze_all_jobs
 from agents.recommendation_agent import generate_recommendations
 from database.db import init_db, insert_resume, insert_match
+from auth_db import init_auth_db, register_user, login_user
+
+# ---------------- INIT DB ----------------
 init_db()
+init_auth_db()
 
 # ---------------- CONFIG ----------------
 st.set_page_config(page_title="AI Match", page_icon="🧠", layout="wide")
-
-PRIMARY = "#2563EB"
-BG = "#F7F8FA"
-CARD = "#FFFFFF"
-TEXT = "#0F172A"
-MUTED = "#475569"
-BORDER = "rgba(15,23,42,0.10)"
-SHADOW = "0 12px 30px rgba(2,6,23,0.06)"
-GREEN_BG = "#DCFCE7"
-GREEN_TXT = "#166534"
-ORANGE_BG = "#FFEDD5"
-ORANGE_TXT = "#9A3412"
-
 
 def img_to_base64(path: str) -> str:
     with open(path, "rb") as f:
@@ -38,14 +29,72 @@ def img_to_base64(path: str) -> str:
 
 AI_ICON = img_to_base64("ai_icon.png")
 
+# ---------------- SESSION DEFAULTS ----------------
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "user_name" not in st.session_state:
+    st.session_state.user_name = ""
+if "auth_tab" not in st.session_state:
+    st.session_state.auth_tab = "login"
+if "page" not in st.session_state:
+    st.session_state.page = "Home"
 
+# ---------------- HELPERS ----------------
+def is_valid_email(email: str) -> bool:
+    return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email))
 
+def extract_text(filename: str, file_bytes: bytes) -> str:
+    name = filename.lower()
+    if name.endswith(".pdf"):
+        reader = PdfReader(BytesIO(file_bytes))
+        return "\n".join([(p.extract_text() or "") for p in reader.pages]).strip()
+    if name.endswith(".docx"):
+        doc = Document(BytesIO(file_bytes))
+        return "\n".join([p.text for p in doc.paragraphs if p.text]).strip()
+    if name.endswith(".txt"):
+        return file_bytes.decode("utf-8", errors="ignore").strip()
+    raise ValueError("Upload PDF, DOCX, or TXT only.")
+
+def clean_text(t: str) -> str:
+    t = t.lower()
+    t = re.sub(r"http\S+|www\S+", " ", t)
+    t = re.sub(r"[^a-z0-9+\#\.\s]", " ", t)
+    t = re.sub(r"\s+", " ", t).strip()
+    return t
+
+def tfidf_similarity_score(cv_text: str, jd_text: str) -> float:
+    cv = clean_text(cv_text)
+    jd = clean_text(jd_text)
+    if len(cv) < 30 or len(jd) < 30:
+        return 0.0
+    vec = TfidfVectorizer(ngram_range=(1, 2), stop_words="english")
+    m = vec.fit_transform([cv, jd])
+    sim = cosine_similarity(m[0:1], m[1:2])[0][0]
+    return max(0.0, min(1.0, float(sim))) * 100.0
+
+SKILLS = {
+    "java", "python", "sql", "git", "linux", "docker", "aws", "azure",
+    "api", "rest", "rest api", "html", "css", "javascript", "typescript", "react",
+    "ai", "artificial intelligence", "machine learning", "nlp", "data analysis",
+    "computer science", "programming", "oop", "object oriented programming",
+    "data structures", "algorithms", "microsoft office", "word", "excel", "powerpoint",
+    "teamwork", "collaboration", "problem solving", "time management",
+    "communication", "english", "arabic"
+}
+
+def find_skills(text: str) -> set:
+    t = clean_text(text)
+    found = set()
+    for s in SKILLS:
+        if re.search(r"\b" + re.escape(s) + r"\b", t):
+            found.add(s)
+    return found
+
+# ---------------- EMAIL ----------------
 def send_interview_email(to_email, candidate_name, score, job_title, company):
     sender_email = st.secrets["EMAIL_ADDRESS"]
     sender_password = st.secrets["EMAIL_PASSWORD"]
-
     subject = "Interview Invitation - AI Match"
-
     body = f"""
 Dear {candidate_name},
 
@@ -60,13 +109,11 @@ Our team will contact you soon regarding the interview details.
 Best regards,
 AI Match Recruitment Team
 """
-
     msg = MIMEMultipart()
     msg["From"] = sender_email
     msg["To"] = to_email
     msg["Subject"] = subject
     msg.attach(MIMEText(body, "plain"))
-
     try:
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.ehlo()
@@ -82,12 +129,9 @@ AI Match Recruitment Team
 def send_recruitment_email(to_email, candidate_name, candidate_email, score, job_title, company, matched_skills, missing_skills, cv_name):
     sender_email = st.secrets["EMAIL_ADDRESS"]
     sender_password = st.secrets["EMAIL_PASSWORD"]
-
     subject = "New Shortlisted Candidate - AI Match"
-
     matched_text = ", ".join(matched_skills) if matched_skills else "None"
     missing_text = ", ".join(missing_skills) if missing_skills else "None"
-
     body = f"""
 Dear Recruitment Team,
 
@@ -109,13 +153,11 @@ Please review the candidate for the next recruitment stage.
 Best regards,
 AI Match System
 """
-
     msg = MIMEMultipart()
     msg["From"] = sender_email
     msg["To"] = to_email
     msg["Subject"] = subject
     msg.attach(MIMEText(body, "plain"))
-
     try:
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.ehlo()
@@ -127,8 +169,6 @@ AI Match System
         return True, None
     except Exception as e:
         return False, str(e)
-
-
 
 # ---------------- CSS ----------------
 st.markdown(
@@ -149,88 +189,83 @@ st.markdown(
         padding: 20px 20px 60px;
     }}
 
-.nav {{
-    position: sticky;
-    top: 0;
-    z-index: 999;
-    background: transparent;
-    backdrop-filter: none;
-    border-bottom: none;
-    box-shadow: none;
-}}
+    .nav {{
+        position: sticky;
+        top: 0;
+        z-index: 999;
+        background: transparent;
+        backdrop-filter: none;
+        border-bottom: none;
+        box-shadow: none;
+    }}
 
+    .nav-inner {{
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 10px 20px;
+    }}
 
-.nav-inner {{
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 10px 20px;
-}}
+    .brand {{
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-weight: 900;
+        font-size: 26px;
+    }}
 
-.brand {{
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    font-weight: 900;
-    font-size: 26px;
-}}
+    .logo {{
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: #2563EB;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 22px rgba(37,99,235,0.30);
+        overflow: hidden;
+    }}
 
+    .logo-img {{
+        width: 30px;
+        height: 30px;
+        object-fit: contain;
+        display: block;
+    }}
 
-.logo {{
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    background: #2563EB;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 10px 22px rgba(37,99,235,0.30);
-    overflow: hidden;
-}}
+    .navlinks .stButton > button {{
+        background: #FFFFFF !important;
+        border: 1px solid rgba(15,23,42,0.06) !important;
+        color: #475569 !important;
+        font-weight: 700 !important;
+        padding: 10px 12px !important;
+        border-radius: 12px !important;
+        height: auto !important;
+        box-shadow: 0 8px 18px rgba(2,6,23,0.06) !important;
+        transition: all 0.2s ease !important;
+    }}
 
-.logo-img {{
-    width: 30px;
-    height: 30px;
-    object-fit: contain;
-    display: block;
-}}
+    .navlinks .stButton > button:hover {{
+        background: rgba(37,99,235,0.08) !important;
+        color: #2563EB !important;
+        border: 1px solid rgba(37,99,235,0.10) !important;
+    }}
 
-.navlinks .stButton > button {{
-    background: #FFFFFF !important;
-    border: 1px solid rgba(15,23,42,0.06) !important;
-    color: #475569 !important;
-    font-weight: 700 !important;
-    padding: 10px 12px !important;
-    border-radius: 12px !important;
-    height: auto !important;
-    box-shadow: 0 8px 18px rgba(2,6,23,0.06) !important;
-    transition: all 0.2s ease !important;
-}}
+    .active .stButton > button {{
+        background: rgba(37,99,235,0.14) !important;
+        color: #2563EB !important;
+        border: 1px solid rgba(37,99,235,0.18) !important;
+        border-radius: 12px !important;
+        font-weight: 800 !important;
+        box-shadow: none !important;
+    }}
 
-.navlinks .stButton > button:hover {{
-    background: rgba(37,99,235,0.08) !important;
-    color: #2563EB !important;
-    border: 1px solid rgba(37,99,235,0.10) !important;
-}}
-
-.active .stButton > button {{
-    background: rgba(37,99,235,0.14) !important;
-    color: #2563EB !important;
-    border: 1px solid rgba(37,99,235,0.18) !important;
-    border-radius: 12px !important;
-    font-weight: 800 !important;
-    box-shadow: none !important;
-}}
-
-
-
-.card {{
-    background: #FFFFFF;
-    border: none;
-    border-radius: 20px;
-    box-shadow: 0 14px 34px rgba(2,6,23,0.10), 0 3px 10px rgba(2,6,23,0.05);
-    padding: 24px;
-}}
-
+    .card {{
+        background: #FFFFFF;
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 14px 34px rgba(2,6,23,0.10), 0 3px 10px rgba(2,6,23,0.05);
+        padding: 24px;
+    }}
 
     .title {{
         font-size: 42px;
@@ -248,18 +283,6 @@ st.markdown(
         line-height: 1.7;
     }}
 
-    .pill {{
-        display: inline-block;
-        padding: 6px 12px;
-        border-radius: 999px;
-        background: rgba(37,99,235,0.10);
-        color: #2563EB;
-        font-weight: 800;
-        font-size: 12px;
-        margin-right: 8px;
-        margin-bottom: 6px;
-    }}
-
     textarea {{
         color: #0F172A !important;
         background: #FFFFFF !important;
@@ -271,43 +294,42 @@ st.markdown(
         color: #0F172A !important;
     }}
 
-button[kind="primary"] {{
-    background: #2563EB !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 14px !important;
-    font-weight: 900 !important;
-    height: 38px !important;
-    box-shadow: 0 10px 24px rgba(37,99,235,0.25) !important;
-    transition: all 0.2s ease !important;
-}}
+    button[kind="primary"] {{
+        background: #2563EB !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 14px !important;
+        font-weight: 900 !important;
+        height: 38px !important;
+        box-shadow: 0 10px 24px rgba(37,99,235,0.25) !important;
+        transition: all 0.2s ease !important;
+    }}
 
-button[kind="primary"]:hover {{
-    background: #1D4ED8 !important;
-    color: white !important;
-    box-shadow: 0 14px 28px rgba(29,78,216,0.35) !important;
-    transform: translateY(-1px);
-}}
+    button[kind="primary"]:hover {{
+        background: #1D4ED8 !important;
+        color: white !important;
+        box-shadow: 0 14px 28px rgba(29,78,216,0.35) !important;
+        transform: translateY(-1px);
+    }}
 
-button[kind="secondary"] {{
-    background: #FFFFFF !important;
-    color: #0F172A !important;
-    border: 1px solid rgba(15,23,42,0.10) !important;
-    border-radius: 14px !important;
-    font-weight: 900 !important;
-    height: 38px !important;
-    box-shadow: 0 10px 24px rgba(2,6,23,0.08) !important;
-    transition: all 0.2s ease !important;
-}}
+    button[kind="secondary"] {{
+        background: #FFFFFF !important;
+        color: #0F172A !important;
+        border: 1px solid rgba(15,23,42,0.10) !important;
+        border-radius: 14px !important;
+        font-weight: 900 !important;
+        height: 38px !important;
+        box-shadow: 0 10px 24px rgba(2,6,23,0.08) !important;
+        transition: all 0.2s ease !important;
+    }}
 
-button[kind="secondary"]:hover {{
-    background: #F8FAFC !important;
-    color: #0F172A !important;
-    border: 1px solid rgba(15,23,42,0.14) !important;
-    box-shadow: 0 14px 28px rgba(2,6,23,0.12) !important;
-    transform: translateY(-1px);
-}}
-
+    button[kind="secondary"]:hover {{
+        background: #F8FAFC !important;
+        color: #0F172A !important;
+        border: 1px solid rgba(15,23,42,0.14) !important;
+        box-shadow: 0 14px 28px rgba(2,6,23,0.12) !important;
+        transform: translateY(-1px);
+    }}
 
     .chip {{
         display: inline-block;
@@ -319,15 +341,8 @@ button[kind="secondary"]:hover {{
         border: 1px solid rgba(15,23,42,0.06);
     }}
 
-    .chip-green {{
-        background: #DCFCE7;
-        color: #166534;
-    }}
-
-    .chip-orange {{
-        background: #FFEDD5;
-        color: #9A3412;
-    }}
+    .chip-green {{ background: #DCFCE7; color: #166534; }}
+    .chip-orange {{ background: #FFEDD5; color: #9A3412; }}
 
     .ring {{
         width: 170px;
@@ -366,37 +381,6 @@ button[kind="secondary"]:hover {{
         margin-top: 6px;
     }}
 
-    .h {{
-        font-weight: 900;
-        margin-top: 12px;
-        margin-bottom: 8px;
-        font-size: 18px;
-    }}
-
-    .upload-box {{
-        border: 2px dashed rgba(148,163,184,0.35);
-        border-radius: 18px;
-        padding: 28px 18px;
-        text-align: center;
-        background: #FAFBFC;
-        margin-bottom: 14px;
-    }}
-
-    .upload-note {{
-        color: #64748B;
-        font-size: 13px;
-        margin-top: 6px;
-    }}
-
-    .muted {{
-        color: #64748B;
-        font-size: 14px;
-    }}
-
-    .section-gap {{
-        margin-top: 18px;
-    }}
-
     .big-pill {{
         display: inline-block;
         padding: 9px 16px;
@@ -418,39 +402,6 @@ button[kind="secondary"]:hover {{
         min-height: 150px;
     }}
 
-    .preview-big {{
-        background: linear-gradient(135deg,#EEF2FF,#F8FAFC);
-        border: 1px solid rgba(15,23,42,0.08);
-        border-radius: 24px;
-        box-shadow: 0 10px 28px rgba(2,6,23,0.06);
-        padding: 28px;
-        min-height: 360px;
-    }}
-
-.dotted-box {{
-    border: 2px dashed rgba(148,163,184,0.35);
-    border-radius: 18px;
-    padding: 20px;
-    background: #FAFBFC;
-}}
-
-[data-testid="column"]:first-child [data-testid="stVerticalBlockBorderWrapper"] {{
-    border: 1px solid rgba(15,23,42,0.08) !important;
-    border-radius: 18px !important;
-    padding: 20px !important;
-    background: #FAFBFC !important;
-    box-shadow: none !important;
-}}
-
-[data-testid="column"]:last-child [data-testid="stVerticalBlockBorderWrapper"] {{
-    background: #FFFFFF !important;
-    border: none !important;
-    border-radius: 20px !important;
-    padding: 24px !important;
-    box-shadow: 0 14px 34px rgba(2,6,23,0.10), 0 3px 10px rgba(2,6,23,0.05) !important;
-}}
-
-
     .inside-box-title {{
         font-size: 18px;
         font-weight: 900;
@@ -458,77 +409,234 @@ button[kind="secondary"]:hover {{
         color: #0F172A;
     }}
 
-    .about-big {{
-        font-size: 17px;
-        line-height: 1.9;
+    .section-gap {{ margin-top: 18px; }}
+    .muted {{ color: #64748B; font-size: 14px; }}
+
+    /* ── AUTH STYLES ── */
+    .auth-logo {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        margin-bottom: 30px;
+        margin-top: 40px;
+    }}
+    .auth-logo-icon {{
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+        background: #2563EB;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 26px rgba(37,99,235,0.35);
+        overflow: hidden;
+    }}
+    .auth-logo-icon img {{
+        width: 34px;
+        height: 34px;
+        object-fit: contain;
+    }}
+    .auth-logo-name {{
+        font-size: 30px;
+        font-weight: 950;
+        color: #0F172A;
+        letter-spacing: -0.02em;
+    }}
+    .auth-title {{
+        font-size: 24px;
+        font-weight: 900;
+        color: #0F172A;
+        text-align: center;
+        margin-bottom: 4px;
+    }}
+    .auth-subtitle {{
+        font-size: 14px;
+        color: #64748B;
+        text-align: center;
+        margin-bottom: 22px;
+        line-height: 1.6;
+    }}
+    .auth-tabs {{
+        display: flex;
+        background: #F1F5F9;
+        border-radius: 14px;
+        padding: 4px;
+        margin-bottom: 22px;
+        gap: 4px;
+    }}
+    .auth-tab {{
+        flex: 1;
+        text-align: center;
+        padding: 10px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 14px;
+        color: #64748B;
+    }}
+    .auth-tab.active {{
+        background: #FFFFFF;
+        color: #2563EB;
+        box-shadow: 0 4px 12px rgba(2,6,23,0.08);
+    }}
+    .auth-divider {{
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 16px 0;
+        color: #94A3B8;
+        font-size: 13px;
+        font-weight: 600;
+    }}
+    .auth-divider::before, .auth-divider::after {{
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: rgba(15,23,42,0.08);
     }}
     </style>
     """,
     unsafe_allow_html=True
 )
 
-# ---------------- NLP ----------------
-def extract_text(filename: str, file_bytes: bytes) -> str:
-    name = filename.lower()
-    if name.endswith(".pdf"):
-        reader = PdfReader(BytesIO(file_bytes))
-        return "\n".join([(p.extract_text() or "") for p in reader.pages]).strip()
-    if name.endswith(".docx"):
-        doc = Document(BytesIO(file_bytes))
-        return "\n".join([p.text for p in doc.paragraphs if p.text]).strip()
-    if name.endswith(".txt"):
-        return file_bytes.decode("utf-8", errors="ignore").strip()
-    raise ValueError("Upload PDF, DOCX, or TXT only.")
 
-def clean_text(t: str) -> str:
-    t = t.lower()
-    t = re.sub(r"http\S+|www\S+", " ", t)
-    t = re.sub(r"[^a-z0-9+\#\.\s]", " ", t)
-    t = re.sub(r"\s+", " ", t).strip()
-    return t
+# ════════════════════════════════════════════════════════════════════════════
+#  AUTH PAGE
+# ════════════════════════════════════════════════════════════════════════════
+def page_auth():
+    _, mid, _ = st.columns([1, 1.5, 1])
+    with mid:
 
-def tfidf_similarity_score(cv_text: str, jd_text: str) -> float:
-    cv = clean_text(cv_text)
-    jd = clean_text(jd_text)
-    if len(cv) < 30 or len(jd) < 30:
-        return 0.0
-    vec = TfidfVectorizer(ngram_range=(1, 2), stop_words="english")
-    m = vec.fit_transform([cv, jd])
-    sim = cosine_similarity(m[0:1], m[1:2])[0][0]
-    return max(0.0, min(1.0, float(sim))) * 100.0
+        # Logo
+        st.markdown(
+            f"""
+            <div class="auth-logo">
+                <div class="auth-logo-icon">
+                    <img src="data:image/png;base64,{AI_ICON}" />
+                </div>
+                <div class="auth-logo-name">AI Match</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-SKILLS = {
-    "java", "python", "sql", "git", "linux", "docker", "aws", "azure",
-    "api", "rest", "rest api", "html", "css", "javascript", "typescript", "react",
-    "ai", "artificial intelligence", "machine learning", "nlp", "data analysis",
-    "computer science", "programming", "oop", "object oriented programming", "data structures", "algorithms",
-    "microsoft office", "word", "excel", "powerpoint",
-    "teamwork", "collaboration", "problem solving", "time management", "communication", "english", "arabic"
-}
+        # Visual tab indicator
+        login_cls = "auth-tab active" if st.session_state.auth_tab == "login" else "auth-tab"
+        reg_cls   = "auth-tab active" if st.session_state.auth_tab == "register" else "auth-tab"
+        st.markdown(
+            f"""
+            <div class="auth-tabs">
+                <div class="{login_cls}">Sign In</div>
+                <div class="{reg_cls}">Create Account</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-def find_skills(text: str) -> set:
-    t = clean_text(text)
-    found = set()
-    for s in SKILLS:
-        if re.search(r"\b" + re.escape(s) + r"\b", t):
-            found.add(s)
-    return found
+        # Clickable tab buttons
+        tc1, tc2 = st.columns(2)
+        with tc1:
+            if st.button("Sign In", key="tab_login", use_container_width=True,
+                         type="primary" if st.session_state.auth_tab == "login" else "secondary"):
+                st.session_state.auth_tab = "login"
+                st.rerun()
+        with tc2:
+            if st.button("Create Account", key="tab_reg", use_container_width=True,
+                         type="primary" if st.session_state.auth_tab == "register" else "secondary"):
+                st.session_state.auth_tab = "register"
+                st.rerun()
 
-def compute_all(cv_text: str, jd_text: str):
-    sim = tfidf_similarity_score(cv_text, jd_text)
-    cv_sk = find_skills(cv_text)
-    jd_sk = find_skills(jd_text)
-    sk = 0.0 if not jd_sk else (len(cv_sk & jd_sk) / len(jd_sk)) * 100.0
-    final = sim if sk == 0.0 else (0.25 * sim + 0.75 * sk)
-    matched = sorted(cv_sk & jd_sk)
-    missing = sorted(jd_sk - cv_sk)
-    return final, sim, sk, matched, missing
+        st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
 
-# ---------------- NAV / ROUTING ----------------
-PAGES = ["Home", "Dashboards", "About", "Contact"]
+        # ── LOGIN ──────────────────────────────────────────────────────────
+        if st.session_state.auth_tab == "login":
+            st.markdown(
+                '<div class="auth-title">Welcome back 👋</div>'
+                '<div class="auth-subtitle">Sign in to your AI Match account to continue</div>',
+                unsafe_allow_html=True
+            )
 
-if "page" not in st.session_state:
-    st.session_state.page = "Home"
+            login_email    = st.text_input("Email address", key="login_email", placeholder="you@example.com")
+            login_password = st.text_input("Password", key="login_password", type="password", placeholder="Your password")
+
+            st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+
+            if st.button("Sign In →", key="login_btn", type="primary", use_container_width=True):
+                if not login_email.strip():
+                    st.error("Please enter your email address.")
+                elif not is_valid_email(login_email):
+                    st.error("Please enter a valid email address.")
+                elif not login_password:
+                    st.error("Please enter your password.")
+                else:
+                    ok, result = login_user(login_email, login_password)
+                    if ok:
+                        st.session_state.logged_in = True
+                        st.session_state.user_name = result
+                        st.rerun()
+                    else:
+                        st.error(result)
+
+            st.markdown('<div class="auth-divider">New to AI Match?</div>', unsafe_allow_html=True)
+
+            if st.button("Create a free account", key="go_register", use_container_width=True):
+                st.session_state.auth_tab = "register"
+                st.rerun()
+
+        # ── REGISTER ───────────────────────────────────────────────────────
+        else:
+            st.markdown(
+                '<div class="auth-title">Create your account ✨</div>'
+                '<div class="auth-subtitle">Join AI Match and find your best job matches instantly</div>',
+                unsafe_allow_html=True
+            )
+
+            reg_name     = st.text_input("Full name", key="reg_name", placeholder="Faisal Alhudaithy")
+            reg_email    = st.text_input("Email address", key="reg_email", placeholder="you@example.com")
+            reg_password = st.text_input("Password", key="reg_password", type="password", placeholder="At least 8 characters")
+            reg_confirm  = st.text_input("Confirm password", key="reg_confirm", type="password", placeholder="Repeat your password")
+
+            st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+
+            if st.button("Create Account →", key="register_btn", type="primary", use_container_width=True):
+                if not reg_name.strip():
+                    st.error("Please enter your full name.")
+                elif not reg_email.strip():
+                    st.error("Please enter your email address.")
+                elif not is_valid_email(reg_email):
+                    st.error("Please enter a valid email address.")
+                elif len(reg_password) < 8:
+                    st.error("Password must be at least 8 characters.")
+                elif reg_password != reg_confirm:
+                    st.error("Passwords do not match.")
+                else:
+                    ok, err = register_user(reg_name, reg_email, reg_password)
+                    if ok:
+                        st.success("Account created successfully! You can now sign in.")
+                        st.session_state.auth_tab = "login"
+                        st.rerun()
+                    else:
+                        st.error(err)
+
+            st.markdown('<div class="auth-divider">Already have an account?</div>', unsafe_allow_html=True)
+
+            if st.button("Sign in instead", key="go_login", use_container_width=True):
+                st.session_state.auth_tab = "login"
+                st.rerun()
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  SHOW AUTH WALL IF NOT LOGGED IN  — stops everything below from running
+# ════════════════════════════════════════════════════════════════════════════
+if not st.session_state.logged_in:
+    page_auth()
+    st.stop()
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  NAV / ROUTING  (only reached when logged in)
+# ════════════════════════════════════════════════════════════════════════════
+PAGES = ["Home", "Dashboard", "About", "Contact"]
 
 qp = st.query_params.get("page")
 if qp in PAGES:
@@ -539,8 +647,7 @@ def set_page(p: str):
     st.query_params["page"] = p
     st.rerun()
 
-
-# ---------------- NAVBAR UI ----------------
+# ---------------- NAVBAR ----------------
 st.markdown('<div class="nav"><div class="nav-inner">', unsafe_allow_html=True)
 
 col1, col2 = st.columns([1.5, 3.5], vertical_alignment="center")
@@ -560,32 +667,40 @@ with col1:
 
 with col2:
     st.markdown('<div class="navlinks">', unsafe_allow_html=True)
+    b1, b2, b3, b4, b5 = st.columns(5, vertical_alignment="center")
 
-    b1, b2, b3, b4 = st.columns(4, vertical_alignment="center")
+    def nav_btn(col, label, target):
+        with col:
+            cls = "active" if st.session_state.page == target else ""
+            st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
+            if st.button(label, use_container_width=True, key=f"nav_{target}"):
+                set_page(target)
+            st.markdown("</div>", unsafe_allow_html=True)
 
-    def nav_btn(label, target):
-        cls = "active" if st.session_state.page == target else ""
-        st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
-        if st.button(label, use_container_width=True, key=f"nav_{target}"):
-            set_page(target)
-        st.markdown("</div>", unsafe_allow_html=True)
+    nav_btn(b1, "⌂ Home", "Home")
+    nav_btn(b2, "⌘ Dashboard", "Dashboard")
+    nav_btn(b3, "ⓘ About", "About")
+    nav_btn(b4, "✉ Contact", "Contact")
 
-    with b1:
-        nav_btn("⌂ Home", "Home")
-    with b2:
-        nav_btn("⌘ Dashboard", "Dashboard")
-    with b3:
-        nav_btn("ⓘ About", "About")
-    with b4:
-        nav_btn("✉ Contact", "Contact")
+    # Logout button in navbar
+    with b5:
+        first_name = st.session_state.user_name.split()[0] if st.session_state.user_name else "User"
+        if st.button(f"👤 {first_name}  ·  Logout", use_container_width=True, key="nav_logout"):
+            st.session_state.logged_in = False
+            st.session_state.user_name = ""
+            st.session_state.page = "Home"
+            st.session_state.auth_tab = "login"
+            st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("</div></div>", unsafe_allow_html=True)
 
 
+# ════════════════════════════════════════════════════════════════════════════
+#  PAGES
+# ════════════════════════════════════════════════════════════════════════════
 
-# ---------------- PAGES ----------------
 def page_home():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     left, right = st.columns([1.15, 1], gap="large")
@@ -602,11 +717,9 @@ def page_home():
         )
 
         c1, c2, c3 = st.columns([0.28, 0.28, 0.44], gap="small")
-
         with c1:
             if st.button("Try Now →", key="home_try", type="primary", use_container_width=True):
                 set_page("Dashboard")
-
         with c2:
             if st.button("Learn More", key="home_learn", type="secondary", use_container_width=True):
                 set_page("About")
@@ -621,13 +734,10 @@ def page_home():
         st.markdown(
             f"""
 <div style="background: linear-gradient(135deg,#E0EAFF,#F5F8FF); border: 1px solid rgba(15,23,42,0.08); border-radius: 24px; box-shadow: 0 10px 28px rgba(2,6,23,0.06); padding: 28px; min-height: 420px;">
-
 <div style="width:200px; height:200px; border-radius:32px; background:white; display:flex; align-items:center; justify-content:center; margin:0 auto 28px auto; box-shadow:0 14px 28px rgba(15,23,42,0.08);">
     <img src="data:image/png;base64,{AI_ICON}" style="width:130px; height:130px; object-fit:contain; filter:drop-shadow(0 12px 24px rgba(37,99,235,0.18));" />
 </div>
-
 <div style="display:flex; gap:16px; margin-top:10px;">
-
 <div style="background:white; border-radius:18px; padding:16px; flex:1; box-shadow:0 12px 22px rgba(2,6,23,0.08); display:flex; align-items:center; gap:12px;">
 <div style="width:36px; height:36px; border-radius:10px; background:#16A34A; display:flex; align-items:center; justify-content:center; color:white; font-size:18px;">✓</div>
 <div>
@@ -635,7 +745,6 @@ def page_home():
 <div style="font-size:26px; font-weight:900; color:#16A34A;">87%</div>
 </div>
 </div>
-
 <div style="background:white; border-radius:18px; padding:16px; flex:1; box-shadow:0 12px 22px rgba(2,6,23,0.08); display:flex; align-items:center; gap:12px;">
 <div style="width:36px; height:36px; border-radius:10px; background:#4F46E5; display:flex; align-items:center; justify-content:center; color:white; font-size:18px;">⚡</div>
 <div>
@@ -643,7 +752,6 @@ def page_home():
 <div style="font-size:16px; font-weight:900;">2 seconds</div>
 </div>
 </div>
-
 </div>
 </div>
 """,
@@ -661,7 +769,6 @@ def page_home():
         ("Accurate Matching", "Skill match + similarity scoring for better decisions."),
         ("Secure & Private", "Your data is processed securely with privacy protection.")
     ]
-
     for col, (t, d) in zip([f1, f2, f3, f4], feats):
         with col:
             st.markdown(
@@ -687,7 +794,7 @@ def page_dashboard():
     if "cv_bytes" not in st.session_state:
         st.session_state.cv_bytes = None
     if "candidate_name" not in st.session_state:
-        st.session_state.candidate_name = ""
+        st.session_state.candidate_name = st.session_state.user_name
     if "candidate_email" not in st.session_state:
         st.session_state.candidate_email = ""
 
@@ -695,12 +802,7 @@ def page_dashboard():
 
     with left:
         with st.container(border=True):
-            st.markdown(
-                """
-                <div style="font-size:18px; font-weight:900; margin-bottom:12px; color:#0F172A;">Upload CV</div>
-                """,
-                unsafe_allow_html=True
-            )
+            st.markdown('<div style="font-size:18px; font-weight:900; margin-bottom:12px; color:#0F172A;">Upload CV</div>', unsafe_allow_html=True)
 
             st.text_input("Full Name", key="candidate_name")
             st.text_input("Email Address", key="candidate_email")
@@ -719,16 +821,7 @@ def page_dashboard():
             if st.session_state.cv_name:
                 st.markdown(
                     f"""
-                    <div style="
-                        margin-top:10px;
-                        margin-bottom:14px;
-                        padding:12px 14px;
-                        background:white;
-                        border:1px solid rgba(15,23,42,0.08);
-                        border-radius:14px;
-                        font-weight:700;
-                        color:#0F172A;
-                    ">
+                    <div style="margin-top:10px; margin-bottom:14px; padding:12px 14px; background:white; border:1px solid rgba(15,23,42,0.08); border-radius:14px; font-weight:700; color:#0F172A;">
                         Uploaded CV: {st.session_state.cv_name}
                     </div>
                     """,
@@ -748,19 +841,13 @@ def page_dashboard():
                     st.error("Please enter your full name.")
                 elif not st.session_state.candidate_email.strip():
                     st.error("Please enter your email address.")
-                elif not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", st.session_state.candidate_email):
+                elif not is_valid_email(st.session_state.candidate_email):
                     st.error("Please enter a valid email address.")
                 elif not st.session_state.cv_bytes or not st.session_state.cv_name:
                     st.error("Upload a CV first.")
                 else:
                     cv_data = analyze_cv(st.session_state.cv_name, st.session_state.cv_bytes)
-
-                    resume_id = insert_resume(
-                        st.session_state.cv_name,
-                        cv_data["text"],
-                        cv_data["skills"]
-                    )
-
+                    resume_id = insert_resume(st.session_state.cv_name, cv_data["text"], cv_data["skills"])
                     jobs = load_jobs()
                     match_results = analyze_all_jobs(cv_data, jobs)
                     recommendations = generate_recommendations(match_results, top_n=3)
@@ -771,12 +858,8 @@ def page_dashboard():
 
                         email_sent = False
                         email_error = None
-                        recruitment_sent = False
-                        recruitment_error = None
 
                         if top_result["final_score"] >= 60:
-
-                            # send email to candidate
                             email_sent, email_error = send_interview_email(
                                 to_email=st.session_state.candidate_email,
                                 candidate_name=st.session_state.candidate_name,
@@ -784,9 +867,7 @@ def page_dashboard():
                                 job_title=top_result["title"],
                                 company=top_result["company"]
                             )
-
-                            # send email to recruitment company
-                            recruitment_sent, recruitment_error = send_recruitment_email(
+                            send_recruitment_email(
                                 to_email=st.secrets["RECRUITMENT_EMAIL"],
                                 candidate_name=st.session_state.candidate_name,
                                 candidate_email=st.session_state.candidate_email,
@@ -815,11 +896,7 @@ def page_dashboard():
 
                         if top_result["final_score"] >= 60:
                             if email_sent:
-                                st.success(
-                                    f"Congratulations {st.session_state.candidate_name}! "
-                                    f"Your score is above 60%, and an interview email has been sent to "
-                                    f"{st.session_state.candidate_email}."
-                                )
+                                st.success(f"Congratulations {st.session_state.candidate_name}! Your score is above 60%, and an interview email has been sent to {st.session_state.candidate_email}.")
                             else:
                                 st.error(f"Email failed: {email_error}")
                         else:
@@ -830,32 +907,16 @@ def page_dashboard():
                         for rec in recommendations:
                             st.markdown(
                                 f"""
-                                <div style="
-                                    border:1px solid rgba(15,23,42,0.08);
-                                    border-radius:16px;
-                                    padding:16px;
-                                    margin-bottom:14px;
-                                    background:white;
-                                ">
-                                    <div style="font-size:18px; font-weight:900; color:#0F172A;">
-                                        {rec['title']}
-                                    </div>
-                                    <div style="color:#475569; font-size:14px; margin-bottom:6px;">
-                                        {rec['company']} • {rec['location']}
-                                    </div>
+                                <div style="border:1px solid rgba(15,23,42,0.08); border-radius:16px; padding:16px; margin-bottom:14px; background:white;">
+                                    <div style="font-size:18px; font-weight:900; color:#0F172A;">{rec['title']}</div>
+                                    <div style="color:#475569; font-size:14px; margin-bottom:6px;">{rec['company']} • {rec['location']}</div>
                                     <div style="margin-bottom:8px;">
                                         <span class="chip chip-green">{rec['fit_label']}</span>
                                         <span class="chip chip-green">{rec['final_score']}%</span>
                                     </div>
-                                    <div style="color:#334155; font-size:14px; line-height:1.7; margin-bottom:8px;">
-                                        {rec['reason']}
-                                    </div>
-                                    <div style="color:#9A3412; font-size:14px; line-height:1.7;">
-                                        {rec['tip']}
-                                    </div>
-                                    <div style="margin-top:10px;">
-                                        <a href="{rec['url']}" target="_blank">View Job</a>
-                                    </div>
+                                    <div style="color:#334155; font-size:14px; line-height:1.7; margin-bottom:8px;">{rec['reason']}</div>
+                                    <div style="color:#9A3412; font-size:14px; line-height:1.7;">{rec['tip']}</div>
+                                    <div style="margin-top:10px;"><a href="{rec['url']}" target="_blank">View Job</a></div>
                                 </div>
                                 """,
                                 unsafe_allow_html=True
@@ -875,7 +936,6 @@ def page_dashboard():
                                 matched_skills=result["matched_skills"],
                                 missing_skills=result["missing_skills"]
                             )
-
                             with st.expander(f"{result['title']} at {result['company']} — {result['final_score']}%"):
                                 st.write(f"**Location:** {result['location']}")
                                 st.write(f"**Similarity Score:** {result['similarity_score']}%")
@@ -888,30 +948,15 @@ def page_dashboard():
                 st.markdown(
                     """
                     <div style="text-align:center; padding:90px 20px;">
-                        <div style="
-                            width:120px;
-                            height:70px;
-                            margin:0 auto 18px;
-                            border-radius:999px;
-                            background:#F1F5F9;
-                            display:flex;
-                            align-items:center;
-                            justify-content:center;
-                            font-size:38px;
-                            color:#94A3B8;
-                        ">↗</div>
-                        <div style="font-size:28px; font-weight:900; color:#334155; margin-bottom:10px;">
-                            Ready to Analyze
-                        </div>
-                        <div style="color:#64748B; font-size:15px; max-width:340px; margin:0 auto; line-height:1.7;">
-                            Upload your CV and click "Analyze Match" to see automatic job recommendations
-                        </div>
+                        <div style="width:120px; height:70px; margin:0 auto 18px; border-radius:999px; background:#F1F5F9; display:flex; align-items:center; justify-content:center; font-size:38px; color:#94A3B8;">↗</div>
+                        <div style="font-size:28px; font-weight:900; color:#334155; margin-bottom:10px;">Ready to Analyze</div>
+                        <div style="color:#64748B; font-size:15px; max-width:340px; margin:0 auto; line-height:1.7;">Upload your CV and click "Analyze Match" to see automatic job recommendations</div>
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
 
-
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 def page_about():
@@ -919,101 +964,52 @@ def page_about():
     st.markdown("<div class='title' style='font-size:46px;'>About</div>", unsafe_allow_html=True)
 
     with st.container(border=True):
-        st.write(
-            "**AI Match** is an intelligent multi-agent system that analyzes CVs "
-            "and automatically matches them with relevant job opportunities."
-        )
-
+        st.write("**AI Match** is an intelligent multi-agent system that analyzes CVs and automatically matches them with relevant job opportunities.")
         st.markdown("### How the system works")
         st.write("• CV Agent extracts text and detects skills from uploaded resumes")
         st.write("• Job Agent retrieves job listings from the web using web scraping")
         st.write("• Vector Agent creates semantic embeddings and performs similarity search using FAISS")
         st.write("• Match Agent evaluates similarity and skill compatibility")
         st.write("• Recommendation Agent explains results and suggests improvements")
-
         st.markdown("### Technologies used")
         st.write("• Natural Language Processing (NLP)")
         st.write("• Sentence Transformers for semantic embeddings")
         st.write("• FAISS vector database for similarity search")
         st.write("• Web scraping for real-time job retrieval")
         st.write("• Streamlit for the interactive web interface")
-
-        st.write(
-            "The platform automatically analyzes candidate profiles, retrieves relevant job postings, "
-            "and recommends the most suitable opportunities."
-        )
+        st.write("The platform automatically analyzes candidate profiles, retrieves relevant job postings, and recommends the most suitable opportunities.")
 
     st.markdown("</div>", unsafe_allow_html=True)
-
-
-
 
 
 def page_contact():
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     st.markdown("<div class='title' style='font-size:42px; text-align:center;'>Get In Touch</div>", unsafe_allow_html=True)
-    st.markdown("<div class='subtitle' style='text-align:center; max-width:700px; margin:0 auto 30px;'>Have questions or feedback? We'd love to hear from you. Send us a message and we'll respond as soon as possible.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='subtitle' style='text-align:center; max-width:700px; margin:0 auto 30px;'>Have questions or feedback? We'd love to hear from you.</div>", unsafe_allow_html=True)
 
     c1, c2 = st.columns([1, 1.3], gap="large")
 
     with c1:
-        st.markdown(
-            """
-            <div class="card">
-                <div class="inside-box-title">Email</div>
-                <div>support@aimatch.com</div>
-                <div>info@aimatch.com</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
+        st.markdown('<div class="card"><div class="inside-box-title">Email</div><div>support@aimatch.com</div><div>info@aimatch.com</div></div>', unsafe_allow_html=True)
         st.markdown("<div class='section-gap'></div>", unsafe_allow_html=True)
-
-        st.markdown(
-            """
-            <div class="card">
-                <div class="inside-box-title">Phone</div>
-                <div>+966 12 345 6789</div>
-                <div>Mon-Fri 9am-6pm EST</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
+        st.markdown('<div class="card"><div class="inside-box-title">Phone</div><div>+966 12 345 6789</div><div>Mon-Fri 9am-6pm EST</div></div>', unsafe_allow_html=True)
         st.markdown("<div class='section-gap'></div>", unsafe_allow_html=True)
-
-        st.markdown(
-            """
-            <div class="card">
-                <div class="inside-box-title">Office</div>
-                <div>123 Tech Street</div>
-                <div>Abha, Aseer</div>
-                <div>Kingdom of Saudi Arabia</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        st.markdown('<div class="card"><div class="inside-box-title">Office</div><div>123 Tech Street</div><div>Abha, Aseer</div><div>Kingdom of Saudi Arabia</div></div>', unsafe_allow_html=True)
 
     with c2:
         st.text_input("Name", key="c_name")
         st.text_input("Email", key="c_email")
         st.text_input("Subject", key="c_subject")
         st.text_area("Message", height=160, key="c_msg")
-
-        st.markdown('<div class="primary">', unsafe_allow_html=True)
         st.button("Send Message", use_container_width=True, key="send_msg")
-        st.markdown("</div>", unsafe_allow_html=True)
-
         st.caption("Demo UI only (no email sending yet).")
 
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
-
-
-   
-
-# ---------------- ROUTER ----------------
+# ════════════════════════════════════════════════════════════════════════════
+#  ROUTER
+# ════════════════════════════════════════════════════════════════════════════
 if st.session_state.page == "Home":
     page_home()
 elif st.session_state.page == "Dashboard":
