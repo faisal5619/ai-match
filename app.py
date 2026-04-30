@@ -715,7 +715,7 @@ st.markdown(
 )
 
 # ── Single row navbar ──
-nb = st.columns([1.6, 0.8, 1.1, 0.8, 0.9, 0.15, 1.0, 1.2, 1.0], vertical_alignment="center")
+nb = st.columns([1.8, 0.9, 1.2, 0.9, 1.0, 1.1, 1.0], vertical_alignment="center")
 
 # Brand
 with nb[0]:
@@ -744,25 +744,9 @@ nav_btn(nb[1], "Home", "Home")
 nav_btn(nb[2], "Dashboard", "Dashboard")
 nav_btn(nb[3], "About", "About")
 nav_btn(nb[4], "Contact", "Contact")
-
-# Divider + avatar + name
-with nb[5]:
-    st.markdown('<div style="width:1px;height:28px;background:rgba(15,23,42,0.10);margin:0 auto;"></div>', unsafe_allow_html=True)
+nav_btn(nb[5], "👤 Profile", "Profile")
 
 with nb[6]:
-    st.markdown(
-        f'''<div style="display:flex;align-items:center;gap:6px;justify-content:center;">
-            <div style="width:28px;height:28px;border-radius:50%;background:#2563EB;color:white;
-                        font-weight:900;font-size:11px;display:flex;align-items:center;
-                        justify-content:center;flex-shrink:0;">{avatar_letter}</div>
-            <span style="font-size:13px;font-weight:700;color:#0F172A;">{first_name}</span>
-        </div>''',
-        unsafe_allow_html=True
-    )
-
-nav_btn(nb[7], "My Profile", "Profile")
-
-with nb[8]:
     st.markdown('<div class="nav-logout">', unsafe_allow_html=True)
     if st.button("Logout", use_container_width=True, key="nav_logout"):
         st.session_state.logged_in = False
