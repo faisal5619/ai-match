@@ -668,65 +668,24 @@ def set_page(p: str):
     st.query_params["page"] = p
     st.rerun()
 
+# Navbar CSS — style all nav buttons uniformly
 st.markdown(
     f"""
     <style>
-    /* ── NAVBAR ── */
-    .navbar-wrap {{
-        background: #FFFFFF;
-        border-radius: 16px;
-        box-shadow: 0 2px 20px rgba(2,6,23,0.08);
-        padding: 10px 20px;
-        margin-bottom: 28px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }}
-    .nb-brand {{
-        display:flex; align-items:center; gap:10px;
-        font-weight:900; font-size:19px; color:#0F172A;
-        flex-shrink:0; margin-right:16px;
-    }}
-    .nb-logo {{
-        width:36px; height:36px; border-radius:10px;
-        background:#2563EB; overflow:hidden;
-        display:flex; align-items:center; justify-content:center;
-        box-shadow:0 4px 12px rgba(37,99,235,0.28);
-    }}
-    .nb-logo img {{ width:22px; height:22px; object-fit:contain; }}
-    .nb-spacer {{ flex:1; }}
-    .nb-avatar {{
-        width:30px; height:30px; border-radius:50%;
-        background:#2563EB; color:white;
-        font-weight:900; font-size:12px;
-        display:inline-flex; align-items:center; justify-content:center;
-        box-shadow:0 2px 8px rgba(37,99,235,0.28);
-        margin-right:4px; flex-shrink:0;
-    }}
-    .nb-name {{
-        font-size:13px; font-weight:700; color:#0F172A;
-        margin-right:8px; flex-shrink:0;
-    }}
-    .nb-sep {{
-        width:1px; height:20px;
-        background:rgba(15,23,42,0.10);
-        margin:0 6px; flex-shrink:0;
-    }}
-
-    /* nav buttons styling */
-    .navlinks .stButton > button {{
+    /* ── Remove default button styles for nav ── */
+    [data-testid="stHorizontalBlock"]:first-of-type .stButton > button {{
         background: transparent !important;
         border: none !important;
+        box-shadow: none !important;
         color: #475569 !important;
         font-weight: 600 !important;
         font-size: 14px !important;
-        padding: 8px 14px !important;
+        padding: 8px 10px !important;
         border-radius: 10px !important;
         height: auto !important;
-        box-shadow: none !important;
-        transition: all 0.15s ease !important;
+        transition: all 0.15s !important;
     }}
-    .navlinks .stButton > button:hover {{
+    [data-testid="stHorizontalBlock"]:first-of-type .stButton > button:hover {{
         background: #F1F5F9 !important;
         color: #0F172A !important;
     }}
@@ -736,92 +695,78 @@ st.markdown(
         font-weight: 800 !important;
     }}
     .nav-logout .stButton > button {{
-        background: #FEF2F2 !important;
+        background: rgba(220,38,38,0.08) !important;
         color: #DC2626 !important;
-        border: 1px solid rgba(220,38,38,0.15) !important;
         font-weight: 700 !important;
-        font-size: 13px !important;
-        padding: 7px 14px !important;
-        border-radius: 10px !important;
-        height: auto !important;
-        box-shadow: none !important;
-    }}
-    .nav-logout .stButton > button:hover {{
-        background: #FEE2E2 !important;
-        color: #B91C1C !important;
     }}
     </style>
     """,
     unsafe_allow_html=True
 )
 
-# Build navbar using columns inside a styled container
-with st.container():
-    st.markdown('<div class="navbar-wrap">', unsafe_allow_html=True)
+# ── Single row navbar ──
+nb = st.columns([1.6, 0.8, 1.1, 0.8, 0.9, 0.15, 1.0, 1.2, 1.0], vertical_alignment="center")
 
-    col_brand, col_nav, col_user = st.columns([2, 4, 3], vertical_alignment="center")
-
-    with col_brand:
-        st.markdown(
-            f"""
-            <div class="nb-brand">
-                <div class="nb-logo">
-                    <img src="data:image/png;base64,{AI_ICON}" />
-                </div>
-                AI Match
+# Brand
+with nb[0]:
+    st.markdown(
+        f'''<div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:10px;background:#2563EB;
+                        display:flex;align-items:center;justify-content:center;
+                        box-shadow:0 4px 12px rgba(37,99,235,0.28);overflow:hidden;flex-shrink:0;">
+                <img src="data:image/png;base64,{AI_ICON}" style="width:22px;height:22px;object-fit:contain;" />
             </div>
-            """,
-            unsafe_allow_html=True
-        )
+            <span style="font-weight:900;font-size:19px;color:#0F172A;">AI Match</span>
+        </div>''',
+        unsafe_allow_html=True
+    )
 
-    with col_nav:
-        st.markdown('<div class="navlinks">', unsafe_allow_html=True)
-        n1, n2, n3, n4 = st.columns(4)
-
-        def nav_btn(col, label, target):
-            with col:
-                cls = "nav-active" if current_page == target else ""
-                st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
-                if st.button(label, use_container_width=True, key=f"nav_{target}"):
-                    set_page(target)
-                st.markdown("</div>", unsafe_allow_html=True)
-
-        nav_btn(n1, "Home", "Home")
-        nav_btn(n2, "Dashboard", "Dashboard")
-        nav_btn(n3, "About", "About")
-        nav_btn(n4, "Contact", "Contact")
+# Nav buttons
+def nav_btn(col, label, target):
+    with col:
+        cls = "nav-active" if current_page == target else ""
+        st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
+        if st.button(label, use_container_width=True, key=f"nav_{target}"):
+            set_page(target)
         st.markdown("</div>", unsafe_allow_html=True)
 
-    with col_user:
-        u1, u2, u3 = st.columns([1.2, 1.8, 1.2], vertical_alignment="center")
-        with u1:
-            st.markdown(
-                f'<div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;">'
-                f'<div class="nb-avatar">{avatar_letter}</div>'
-                f'<span class="nb-name">{first_name}</span></div>',
-                unsafe_allow_html=True
-            )
-        with u2:
-            cls = "nav-active" if current_page == "Profile" else ""
-            st.markdown(f'<div class="navlinks {cls}">', unsafe_allow_html=True)
-            if st.button("My Profile", use_container_width=True, key="nav_Profile"):
-                set_page("Profile")
-            st.markdown("</div>", unsafe_allow_html=True)
-        with u3:
-            st.markdown('<div class="nav-logout">', unsafe_allow_html=True)
-            if st.button("Logout", use_container_width=True, key="nav_logout"):
-                st.session_state.logged_in = False
-                st.session_state.user_name = ""
-                st.session_state.user_email = ""
-                st.session_state.page = "Home"
-                st.session_state.auth_tab = "login"
-                st.session_state.cv_name = None
-                st.session_state.cv_bytes = None
-                st.session_state.cv_loaded_from_db = False
-                st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
+nav_btn(nb[1], "Home", "Home")
+nav_btn(nb[2], "Dashboard", "Dashboard")
+nav_btn(nb[3], "About", "About")
+nav_btn(nb[4], "Contact", "Contact")
 
+# Divider + avatar + name
+with nb[5]:
+    st.markdown('<div style="width:1px;height:28px;background:rgba(15,23,42,0.10);margin:0 auto;"></div>', unsafe_allow_html=True)
+
+with nb[6]:
+    st.markdown(
+        f'''<div style="display:flex;align-items:center;gap:6px;justify-content:center;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#2563EB;color:white;
+                        font-weight:900;font-size:11px;display:flex;align-items:center;
+                        justify-content:center;flex-shrink:0;">{avatar_letter}</div>
+            <span style="font-size:13px;font-weight:700;color:#0F172A;">{first_name}</span>
+        </div>''',
+        unsafe_allow_html=True
+    )
+
+nav_btn(nb[7], "My Profile", "Profile")
+
+with nb[8]:
+    st.markdown('<div class="nav-logout">', unsafe_allow_html=True)
+    if st.button("Logout", use_container_width=True, key="nav_logout"):
+        st.session_state.logged_in = False
+        st.session_state.user_name = ""
+        st.session_state.user_email = ""
+        st.session_state.page = "Home"
+        st.session_state.auth_tab = "login"
+        st.session_state.cv_name = None
+        st.session_state.cv_bytes = None
+        st.session_state.cv_loaded_from_db = False
+        st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
+
+st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════════════════════
 #  PAGES
