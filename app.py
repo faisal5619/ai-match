@@ -672,32 +672,42 @@ def set_page(p: str):
 st.markdown(
     f"""
     <style>
-    /* ── Remove default button styles for nav ── */
-    [data-testid="stHorizontalBlock"]:first-of-type .stButton > button {{
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
+    /* ── Nav button base style ── */
+    .nav-btn .stButton > button {{
+        background: #FFFFFF !important;
+        border: 1px solid rgba(15,23,42,0.08) !important;
+        box-shadow: 0 2px 8px rgba(2,6,23,0.06) !important;
         color: #475569 !important;
-        font-weight: 600 !important;
-        font-size: 14px !important;
-        padding: 8px 10px !important;
+        font-weight: 700 !important;
+        font-size: 13.5px !important;
+        padding: 8px 12px !important;
         border-radius: 10px !important;
         height: auto !important;
         transition: all 0.15s !important;
     }}
-    [data-testid="stHorizontalBlock"]:first-of-type .stButton > button:hover {{
+    .nav-btn .stButton > button:hover {{
         background: #F1F5F9 !important;
-        color: #0F172A !important;
+        color: #2563EB !important;
+        border: 1px solid rgba(37,99,235,0.15) !important;
+        box-shadow: none !important;
     }}
     .nav-active .stButton > button {{
         background: rgba(37,99,235,0.10) !important;
         color: #2563EB !important;
         font-weight: 800 !important;
+        border: 1px solid rgba(37,99,235,0.20) !important;
+        box-shadow: none !important;
     }}
     .nav-logout .stButton > button {{
-        background: rgba(220,38,38,0.08) !important;
+        background: #FEF2F2 !important;
         color: #DC2626 !important;
+        border: 1px solid rgba(220,38,38,0.15) !important;
         font-weight: 700 !important;
+        box-shadow: none !important;
+    }}
+    .nav-logout .stButton > button:hover {{
+        background: #FEE2E2 !important;
+        color: #B91C1C !important;
     }}
     </style>
     """,
@@ -725,7 +735,7 @@ with nb[0]:
 def nav_btn(col, label, target):
     with col:
         cls = "nav-active" if current_page == target else ""
-        st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
+        st.markdown(f'<div class="nav-btn {cls}">', unsafe_allow_html=True)
         if st.button(label, use_container_width=True, key=f"nav_{target}"):
             set_page(target)
         st.markdown("</div>", unsafe_allow_html=True)
