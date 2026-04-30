@@ -668,176 +668,114 @@ first_name = st.session_state.user_name.split()[0] if st.session_state.user_name
 avatar_letter = first_name[0].upper()
 current_page = st.session_state.page
 
+def nav_active(page):
+    return "nav-active" if current_page == page else ""
+
 st.markdown(
     f"""
     <style>
     .navbar {{
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        padding: 10px 24px;
         background: #FFFFFF;
-        border-radius: 18px;
-        box-shadow: 0 4px 24px rgba(2,6,23,0.07);
-        margin: 12px 0 24px 0;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(2,6,23,0.07);
+        padding: 10px 20px;
+        margin-bottom: 24px;
+        gap: 8px;
     }}
     .nav-brand {{
         display: flex;
         align-items: center;
-        gap: 12px;
-        font-weight: 900;
-        font-size: 22px;
-        color: #0F172A;
-        text-decoration: none;
-    }}
-    .nav-logo {{
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-        background: #2563EB;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 6px 16px rgba(37,99,235,0.30);
-        overflow: hidden;
-    }}
-    .nav-logo img {{
-        width: 26px;
-        height: 26px;
-        object-fit: contain;
-    }}
-    .nav-links {{
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }}
-    .nav-user {{
-        display: flex;
-        align-items: center;
         gap: 10px;
+        font-weight: 900;
+        font-size: 20px;
+        color: #0F172A;
+        margin-right: 20px;
+        flex-shrink: 0;
     }}
+    .nav-logo-box {{
+        width: 38px; height: 38px;
+        border-radius: 11px;
+        background: #2563EB;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 4px 12px rgba(37,99,235,0.30);
+        overflow: hidden;
+        flex-shrink: 0;
+    }}
+    .nav-logo-box img {{ width: 24px; height: 24px; object-fit: contain; }}
+    .nav-spacer {{ flex: 1; }}
     .nav-avatar {{
-        width: 36px;
-        height: 36px;
+        width: 34px; height: 34px;
         border-radius: 50%;
         background: #2563EB;
         color: white;
-        font-weight: 900;
-        font-size: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 12px rgba(37,99,235,0.30);
+        font-weight: 900; font-size: 14px;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 3px 10px rgba(37,99,235,0.28);
+        flex-shrink: 0;
     }}
-    .nav-username {{
-        font-weight: 800;
-        font-size: 14px;
-        color: #0F172A;
-    }}
-
-    /* hide streamlit default nav button styles — override per slot */
-    .nav-slot .stButton > button {{
-        background: transparent !important;
-        border: none !important;
-        color: #475569 !important;
-        font-weight: 700 !important;
-        font-size: 13.5px !important;
-        padding: 8px 14px !important;
-        border-radius: 10px !important;
-        height: auto !important;
-        box-shadow: none !important;
-        transition: all 0.18s ease !important;
-        white-space: nowrap !important;
-    }}
-    .nav-slot .stButton > button:hover {{
-        background: rgba(37,99,235,0.08) !important;
-        color: #2563EB !important;
-    }}
-    .nav-slot.active .stButton > button {{
-        background: rgba(37,99,235,0.12) !important;
-        color: #2563EB !important;
-        font-weight: 800 !important;
-    }}
-    .nav-logout .stButton > button {{
-        background: #FEF2F2 !important;
-        border: 1px solid rgba(220,38,38,0.15) !important;
-        color: #DC2626 !important;
-        font-weight: 700 !important;
-        font-size: 13px !important;
-        padding: 8px 16px !important;
-        border-radius: 10px !important;
-        height: auto !important;
-        box-shadow: none !important;
-    }}
-    .nav-logout .stButton > button:hover {{
-        background: #FEE2E2 !important;
-        color: #B91C1C !important;
+    .nav-uname {{
+        font-weight: 800; font-size: 13px; color: #0F172A; margin-right: 4px;
     }}
     </style>
 
-    <div class="navbar">
-        <div class="nav-brand">
-            <div class="nav-logo">
-                <img src="data:image/png;base64,{AI_ICON}" />
-            </div>
-            AI Match
-        </div>
-        <div style="flex:1"></div>
-    </div>
     """,
     unsafe_allow_html=True
 )
 
-# Real nav using columns inside the white card feel
-nav_col1, nav_col2, nav_col3, nav_col4, nav_col5, nav_col6, nav_col7 = st.columns([2.2, 1, 1.2, 1, 1.1, 1.8, 1.2], vertical_alignment="center")
+# Actual clickable nav — one clean row of columns
+nc1, nc2, nc3, nc4, nc5, nc6, nc7, nc8 = st.columns([2, 0.85, 1.1, 0.85, 1.0, 0.5, 1.1, 0.85], vertical_alignment="center")
 
-with nav_col1:
+with nc1:
     st.markdown(
         f"""
-        <div style="display:flex;align-items:center;gap:10px;margin-top:-48px;margin-left:4px;">
-            <div style="width:38px;height:38px;border-radius:11px;background:#2563EB;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(37,99,235,0.30);overflow:hidden;">
-                <img src="data:image/png;base64,{AI_ICON}" style="width:24px;height:24px;object-fit:contain;" />
+        <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:11px;background:#2563EB;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(37,99,235,0.28);overflow:hidden;">
+                <img src="data:image/png;base64,{AI_ICON}" style="width:22px;height:22px;object-fit:contain;" />
             </div>
-            <span style="font-weight:900;font-size:20px;color:#0F172A;">AI Match</span>
+            <span style="font-weight:900;font-size:19px;color:#0F172A;">AI Match</span>
         </div>
-        """,
-        unsafe_allow_html=True
+        """, unsafe_allow_html=True
     )
 
 def nav_btn(col, label, target):
     with col:
-        cls = "active" if current_page == target else ""
-        st.markdown(f'<div class="nav-slot {cls}">', unsafe_allow_html=True)
+        is_active = current_page == target
+        bg = "rgba(37,99,235,0.10)" if is_active else "transparent"
+        color = "#2563EB" if is_active else "#475569"
+        fw = "800" if is_active else "700"
+        st.markdown(
+            f'<div style="margin:-4px 0;">',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            f"""<style>
+            div[data-testid="stButton"] button[kind="secondary"]#btn_{target} {{
+                background: {bg} !important; color: {color} !important; font-weight: {fw} !important;
+            }}
+            </style>""", unsafe_allow_html=True
+        )
         if st.button(label, use_container_width=True, key=f"nav_{target}"):
             set_page(target)
         st.markdown("</div>", unsafe_allow_html=True)
 
-nav_btn(nav_col2, "Home", "Home")
-nav_btn(nav_col3, "Dashboard", "Dashboard")
-nav_btn(nav_col4, "About", "About")
-nav_btn(nav_col5, "Contact", "Contact")
+nav_btn(nc2, "Home", "Home")
+nav_btn(nc3, "Dashboard", "Dashboard")
+nav_btn(nc4, "About", "About")
+nav_btn(nc5, "Contact", "Contact")
 
-# User avatar + name + Profile link
-with nav_col6:
+with nc6:
     st.markdown(
-        f"""
-        <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end;padding-right:4px;">
-            <div style="width:32px;height:32px;border-radius:50%;background:#2563EB;color:white;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(37,99,235,0.30);">{avatar_letter}</div>
-            <span style="font-weight:800;font-size:13px;color:#0F172A;">{first_name}</span>
-        </div>
-        """,
+        f'<div style="display:flex;align-items:center;justify-content:center;height:38px;width:34px;border-radius:50%;background:#2563EB;color:white;font-weight:900;font-size:14px;box-shadow:0 3px 10px rgba(37,99,235,0.28);margin:0 auto;">{avatar_letter}</div>',
         unsafe_allow_html=True
     )
 
-with nav_col6:
-    cls = "active" if current_page == "Profile" else ""
-    st.markdown(f'<div class="nav-slot {cls}" style="margin-top:-8px;">', unsafe_allow_html=True)
-    if st.button("My Profile", use_container_width=True, key="nav_Profile"):
-        set_page("Profile")
-    st.markdown("</div>", unsafe_allow_html=True)
+nav_btn(nc7, f"{first_name} · Profile", "Profile")
 
-with nav_col7:
-    st.markdown('<div class="nav-logout">', unsafe_allow_html=True)
+with nc8:
+    st.markdown('<style>.logout-btn button{background:#FEF2F2!important;color:#DC2626!important;border:1px solid rgba(220,38,38,0.2)!important;font-weight:700!important;border-radius:10px!important;box-shadow:none!important;}</style>', unsafe_allow_html=True)
+    st.markdown('<div class="logout-btn">', unsafe_allow_html=True)
     if st.button("Logout", use_container_width=True, key="nav_logout"):
         st.session_state.logged_in = False
         st.session_state.user_name = ""
@@ -850,8 +788,7 @@ with nav_col7:
         st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
 
-st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-
+st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════════════════════
 #  PAGES
