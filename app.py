@@ -658,135 +658,190 @@ qp = st.query_params.get("page")
 if qp in PAGES:
     st.session_state.page = qp
 
-def set_page(p: str):
-    st.session_state.page = p
-    st.query_params["page"] = p
-    st.rerun()
-
 # ---------------- NAVBAR ----------------
 first_name = st.session_state.user_name.split()[0] if st.session_state.user_name else "User"
 avatar_letter = first_name[0].upper()
 current_page = st.session_state.page
 
-def nav_active(page):
-    return "nav-active" if current_page == page else ""
+def set_page(p: str):
+    st.session_state.page = p
+    st.query_params["page"] = p
+    st.rerun()
+
+def nav_style(target):
+    if current_page == target:
+        return "font-weight:800;color:#2563EB;background:rgba(37,99,235,0.10);border-radius:10px;padding:8px 16px;font-size:14px;border:none;cursor:pointer;"
+    return "font-weight:600;color:#475569;background:transparent;border-radius:10px;padding:8px 16px;font-size:14px;border:none;cursor:pointer;"
 
 st.markdown(
     f"""
     <style>
-    .navbar {{
+    #MainMenu {{visibility:hidden;}}
+    header {{visibility:hidden;}}
+    footer {{visibility:hidden;}}
+
+    .topnav {{
         display: flex;
         align-items: center;
         background: #FFFFFF;
         border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(2,6,23,0.07);
-        padding: 10px 20px;
-        margin-bottom: 24px;
-        gap: 8px;
+        box-shadow: 0 2px 16px rgba(2,6,23,0.08);
+        padding: 0 20px;
+        height: 60px;
+        margin-bottom: 28px;
+        position: sticky;
+        top: 0;
+        z-index: 999;
     }}
-    .nav-brand {{
+    .topnav-brand {{
         display: flex;
         align-items: center;
         gap: 10px;
         font-weight: 900;
-        font-size: 20px;
+        font-size: 19px;
         color: #0F172A;
-        margin-right: 20px;
+        text-decoration: none;
         flex-shrink: 0;
     }}
-    .nav-logo-box {{
-        width: 38px; height: 38px;
-        border-radius: 11px;
+    .topnav-brand-icon {{
+        width: 36px; height: 36px;
+        border-radius: 10px;
         background: #2563EB;
         display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 4px 12px rgba(37,99,235,0.30);
+        box-shadow: 0 4px 12px rgba(37,99,235,0.28);
         overflow: hidden;
+    }}
+    .topnav-brand-icon img {{ width: 22px; height: 22px; object-fit: contain; }}
+    .topnav-links {{
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        margin: 0 auto;
+    }}
+    .topnav-link {{
+        padding: 7px 15px;
+        border-radius: 9px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #475569;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        transition: all 0.15s;
+        text-decoration: none;
+    }}
+    .topnav-link:hover {{ background: #F1F5F9; color: #0F172A; }}
+    .topnav-link.active {{ background: rgba(37,99,235,0.10); color: #2563EB; font-weight: 800; }}
+    .topnav-right {{
+        display: flex;
+        align-items: center;
+        gap: 10px;
         flex-shrink: 0;
     }}
-    .nav-logo-box img {{ width: 24px; height: 24px; object-fit: contain; }}
-    .nav-spacer {{ flex: 1; }}
-    .nav-avatar {{
-        width: 34px; height: 34px;
+    .topnav-avatar {{
+        width: 32px; height: 32px;
         border-radius: 50%;
         background: #2563EB;
         color: white;
-        font-weight: 900; font-size: 14px;
+        font-weight: 900; font-size: 13px;
         display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 3px 10px rgba(37,99,235,0.28);
-        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(37,99,235,0.30);
     }}
-    .nav-uname {{
-        font-weight: 800; font-size: 13px; color: #0F172A; margin-right: 4px;
+    .topnav-username {{
+        font-size: 13.5px;
+        font-weight: 700;
+        color: #0F172A;
+    }}
+    .topnav-divider {{
+        width: 1px; height: 22px;
+        background: rgba(15,23,42,0.10);
+        margin: 0 4px;
+    }}
+
+    /* hide the real streamlit buttons — they just catch clicks */
+    .hidden-nav-btns {{
+        position: absolute;
+        opacity: 0;
+        pointer-events: all;
+        top: 0; left: 0;
+        width: 100%;
+        height: 60px;
+        display: flex;
+        align-items: center;
+    }}
+    .hidden-nav-btns .stButton > button {{
+        height: 60px !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
     }}
     </style>
 
+    <div class="topnav">
+        <div class="topnav-brand">
+            <div class="topnav-brand-icon">
+                <img src="data:image/png;base64,{AI_ICON}" />
+            </div>
+            AI Match
+        </div>
+
+        <div class="topnav-links">
+            <span class="topnav-link {'active' if current_page == 'Home' else ''}">Home</span>
+            <span class="topnav-link {'active' if current_page == 'Dashboard' else ''}">Dashboard</span>
+            <span class="topnav-link {'active' if current_page == 'About' else ''}">About</span>
+            <span class="topnav-link {'active' if current_page == 'Contact' else ''}">Contact</span>
+        </div>
+
+        <div class="topnav-right">
+            <div class="topnav-avatar">{avatar_letter}</div>
+            <span class="topnav-username">{first_name}</span>
+            <div class="topnav-divider"></div>
+            <span class="topnav-link {'active' if current_page == 'Profile' else ''}">Profile</span>
+        </div>
+    </div>
     """,
     unsafe_allow_html=True
 )
 
-# Actual clickable nav — one clean row of columns
-nc1, nc2, nc3, nc4, nc5, nc6, nc7, nc8 = st.columns([2, 0.85, 1.1, 0.85, 1.0, 0.5, 1.1, 0.85], vertical_alignment="center")
+# Hidden real buttons for interactivity
+cols = st.columns([1.8, 0.9, 1.15, 0.85, 0.95, 0.6, 0.9, 0.85])
+labels = ["", "Home", "Dashboard", "About", "Contact", "", "Profile", "Logout"]
+targets = ["", "Home", "Dashboard", "About", "Contact", "", "Profile", ""]
 
-with nc1:
-    st.markdown(
-        f"""
-        <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:36px;height:36px;border-radius:11px;background:#2563EB;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(37,99,235,0.28);overflow:hidden;">
-                <img src="data:image/png;base64,{AI_ICON}" style="width:22px;height:22px;object-fit:contain;" />
-            </div>
-            <span style="font-weight:900;font-size:19px;color:#0F172A;">AI Match</span>
-        </div>
-        """, unsafe_allow_html=True
-    )
-
-def nav_btn(col, label, target):
+for i, (col, label, target) in enumerate(zip(cols, labels, targets)):
+    if not label:
+        continue
     with col:
-        is_active = current_page == target
-        bg = "rgba(37,99,235,0.10)" if is_active else "transparent"
-        color = "#2563EB" if is_active else "#475569"
-        fw = "800" if is_active else "700"
-        st.markdown(
-            f'<div style="margin:-4px 0;">',
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            f"""<style>
-            div[data-testid="stButton"] button[kind="secondary"]#btn_{target} {{
-                background: {bg} !important; color: {color} !important; font-weight: {fw} !important;
+        st.markdown(f"""
+            <style>
+            div[data-testid="column"]:nth-child({i+1}) .stButton > button {{
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                color: transparent !important;
+                height: 44px !important;
+                margin-top: -70px !important;
+                position: relative !important;
+                z-index: 1000 !important;
+                cursor: pointer !important;
             }}
-            </style>""", unsafe_allow_html=True
-        )
-        if st.button(label, use_container_width=True, key=f"nav_{target}"):
-            set_page(target)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-nav_btn(nc2, "Home", "Home")
-nav_btn(nc3, "Dashboard", "Dashboard")
-nav_btn(nc4, "About", "About")
-nav_btn(nc5, "Contact", "Contact")
-
-with nc6:
-    st.markdown(
-        f'<div style="display:flex;align-items:center;justify-content:center;height:38px;width:34px;border-radius:50%;background:#2563EB;color:white;font-weight:900;font-size:14px;box-shadow:0 3px 10px rgba(37,99,235,0.28);margin:0 auto;">{avatar_letter}</div>',
-        unsafe_allow_html=True
-    )
-
-nav_btn(nc7, f"{first_name} · Profile", "Profile")
-
-with nc8:
-    st.markdown('<style>.logout-btn button{background:#FEF2F2!important;color:#DC2626!important;border:1px solid rgba(220,38,38,0.2)!important;font-weight:700!important;border-radius:10px!important;box-shadow:none!important;}</style>', unsafe_allow_html=True)
-    st.markdown('<div class="logout-btn">', unsafe_allow_html=True)
-    if st.button("Logout", use_container_width=True, key="nav_logout"):
-        st.session_state.logged_in = False
-        st.session_state.user_name = ""
-        st.session_state.user_email = ""
-        st.session_state.page = "Home"
-        st.session_state.auth_tab = "login"
-        st.session_state.cv_name = None
-        st.session_state.cv_bytes = None
-        st.session_state.cv_loaded_from_db = False
-        st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
+            </style>
+        """, unsafe_allow_html=True)
+        if label == "Logout":
+            if st.button(label, key="nav_logout", use_container_width=True):
+                st.session_state.logged_in = False
+                st.session_state.user_name = ""
+                st.session_state.user_email = ""
+                st.session_state.page = "Home"
+                st.session_state.auth_tab = "login"
+                st.session_state.cv_name = None
+                st.session_state.cv_bytes = None
+                st.session_state.cv_loaded_from_db = False
+                st.rerun()
+        else:
+            if st.button(label, key=f"nav_{target}", use_container_width=True):
+                set_page(target)
 
 st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
 
