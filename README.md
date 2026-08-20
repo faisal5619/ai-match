@@ -1,5 +1,14 @@
 # AI-Powered CV Screening and Job Matching System
 
+**[Try it live →](https://ai-match-chsfunjq7ybea5wzqr3p4b.streamlit.app/)**
+
+No sign-up needed — click **Try the demo →** on the sign-in screen, or use
+`demo@aimatch.app` / `demo1234`.
+
+*Hosted on Streamlit Community Cloud's free tier, which hibernates apps after 12 hours
+without traffic. If it's asleep, the page offers a wake button and takes about 30
+seconds to start.*
+
 An NLP recruitment tool that matches candidate CVs against job descriptions, scores
 how well they fit, and tells the candidate which skills they are missing.
 
