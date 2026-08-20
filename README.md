@@ -1,6 +1,6 @@
 # AI-Powered CV Screening and Job Matching System
 
-**[Try it live →](https://ai-match-chsfunjq7ybea5wzqr3p4b.streamlit.app/)**
+**[Try it live →](https://faisal-ai-match.streamlit.app/)**
 
 No sign-up needed — click **Try the demo →** on the sign-in screen, or use
 `demo@aimatch.app` / `demo1234`.
