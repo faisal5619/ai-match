@@ -3,6 +3,17 @@ import hashlib
 
 DB_PATH = "aimatch.db"
 
+# A public account so visitors can try the app without registering.
+#
+# It is seeded here in code rather than created by hand through the sign-up
+# form, because Streamlit Community Cloud gives each app a temporary filesystem:
+# when the app sleeps or restarts, aimatch.db is wiped and every registered
+# account disappears with it. Anything created by hand would work for a day and
+# then quietly vanish. Seeding on startup means the demo account always exists.
+DEMO_EMAIL = "demo@aimatch.app"
+DEMO_PASSWORD = "demo1234"
+DEMO_NAME = "Demo User"
+
 
 def get_connection():
     return sqlite3.connect(DB_PATH, check_same_thread=False)
@@ -48,6 +59,18 @@ def init_auth_db():
         conn.commit()
     except Exception:
         pass
+    conn.commit()
+
+    # Seed the demo account. INSERT OR IGNORE means this is safe to run on every
+    # startup: if the account already exists, nothing happens.
+    c.execute(
+        "INSERT OR IGNORE INTO users (full_name, email, password_hash) VALUES (?, ?, ?)",
+        (DEMO_NAME, DEMO_EMAIL, hash_password(DEMO_PASSWORD))
+    )
+    c.execute(
+        "INSERT OR IGNORE INTO user_profiles (email, full_name) VALUES (?, ?)",
+        (DEMO_EMAIL, DEMO_NAME)
+    )
     conn.commit()
     conn.close()
 
