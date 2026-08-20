@@ -14,7 +14,18 @@ from agents.job_agent import load_jobs
 from agents.match_agent import analyze_all_jobs
 from agents.recommendation_agent import generate_recommendations
 from database.db import init_db, insert_resume, insert_match
-from auth_db import init_auth_db, register_user, login_user, save_user_cv, load_user_cv, delete_user_cv, load_user_profile, save_user_profile, fetch_github_skills, DEMO_EMAIL, DEMO_PASSWORD
+from auth_db import init_auth_db, register_user, login_user, save_user_cv, load_user_cv, delete_user_cv, load_user_profile, save_user_profile, fetch_github_skills
+
+# Demo credentials live in auth_db, but importing them directly makes this whole
+# file fail to load if auth_db is ever an older version - which is exactly what
+# happens on a hosting platform that updates files one at a time. Falling back to
+# local defaults means a stale deploy degrades to "demo button doesn't log in"
+# instead of "the entire app is a stack trace".
+try:
+    from auth_db import DEMO_EMAIL, DEMO_PASSWORD
+except ImportError:
+    DEMO_EMAIL = "demo@aimatch.app"
+    DEMO_PASSWORD = "demo1234"
 
 # ---------------- INIT DB ----------------
 init_db()
