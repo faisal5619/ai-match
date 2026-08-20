@@ -14,7 +14,7 @@ from agents.job_agent import load_jobs
 from agents.match_agent import analyze_all_jobs
 from agents.recommendation_agent import generate_recommendations
 from database.db import init_db, insert_resume, insert_match
-from auth_db import init_auth_db, register_user, login_user, save_user_cv, load_user_cv, delete_user_cv, load_user_profile, save_user_profile, fetch_github_skills
+from auth_db import init_auth_db, register_user, login_user, save_user_cv, load_user_cv, delete_user_cv, load_user_profile, save_user_profile, fetch_github_skills, DEMO_EMAIL, DEMO_PASSWORD
 
 # ---------------- INIT DB ----------------
 init_db()
@@ -592,6 +592,27 @@ def page_auth():
                         st.rerun()
                     else:
                         st.error(result)
+
+            # One-click demo. Most first-time visitors are here to look, not to
+            # sign up, and a login wall with no way past it means they leave
+            # without ever seeing the app.
+            st.markdown(
+                '<div class="auth-subtitle" style="margin-top:10px">'
+                'Just looking? Open the demo account &mdash; no sign-up needed.'
+                '</div>',
+                unsafe_allow_html=True
+            )
+
+            if st.button("Try the demo →", key="demo_btn", use_container_width=True):
+                ok, result = login_user(DEMO_EMAIL, DEMO_PASSWORD)
+                if ok:
+                    st.session_state.logged_in = True
+                    st.session_state.user_name = result
+                    st.session_state.user_email = DEMO_EMAIL
+                    st.session_state.cv_loaded_from_db = False
+                    st.rerun()
+                else:
+                    st.error("The demo account is unavailable right now.")
 
             st.markdown('<div class="auth-divider">New to AI Match?</div>', unsafe_allow_html=True)
 
