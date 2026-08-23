@@ -19,8 +19,8 @@ concentration) at King Khalid University.
 
 - **Reads a CV** from PDF or Word and extracts the candidate's skills and experience.
 - **Reads a job description** and extracts what the role actually requires.
-- **Scores the match** between the two using semantic similarity, so it recognises
-  related wording rather than only exact keyword hits.
+- **Scores the match** between the two, combining how many required skills the candidate
+  actually has with how similar the two documents read overall.
 - **Identifies skill gaps** — the requirements the candidate does not yet meet — and
   returns that as concrete feedback rather than a pass/fail.
 - **Recommends** the roles a given CV fits best.
@@ -33,21 +33,36 @@ The system is split into four agents, each with one responsibility:
 |---|---|
 | `cv_agent.py` | Parses the CV and extracts structured skills and experience |
 | `job_agent.py` | Parses the job description and extracts requirements |
-| `match_agent.py` | Embeds both sides and scores the similarity between them |
+| `match_agent.py` | Scores a shortlisted job against the CV and produces the final number |
 | `recommendation_agent.py` | Ranks jobs for a candidate and reports missing skills |
 
-Text from both the CV and the job description is converted into embeddings with
-`sentence-transformers`, so two phrases that mean the same thing score as similar even
-when the words differ. Embeddings are indexed with FAISS, which keeps matching fast as
-the number of jobs grows.
+Matching runs in two stages, and the distinction matters.
+
+**Stage 1 — retrieval.** Every job description is converted into an embedding with
+`sentence-transformers` (`all-MiniLM-L6-v2`) and indexed in FAISS (`IndexFlatL2`). The CV
+is embedded the same way, and FAISS returns the five nearest jobs. This stage recognises
+related wording rather than exact keywords, and it keeps the work manageable as the number
+of jobs grows — only five candidates get scored in detail rather than all of them.
+
+**Stage 2 — ranking.** Each shortlisted job is then scored two ways:
+
+| Component | Weight | What it measures |
+|---|---:|---|
+| Skill overlap | 75% | how many of the job's required skills appear in the CV |
+| TF-IDF cosine similarity | 25% | how similar the two documents are as text |
+
+So the embeddings decide *which* jobs get considered, and the final score is driven mostly
+by concrete skill overlap. Semantic similarity alone produced scores that were too close
+together to be useful — unrelated jobs came out looking comparable — which is why the
+scoring falls back to something more literal.
 
 ## Tech stack
 
 - **Python**
 - **Streamlit** — web interface
-- **sentence-transformers** — semantic embeddings
-- **FAISS** — vector similarity search
-- **scikit-learn** — supporting ML utilities
+- **sentence-transformers** — embeddings for the retrieval stage
+- **FAISS** — vector index for shortlisting candidate jobs
+- **scikit-learn** — TF-IDF and cosine similarity for the scoring stage
 - **PyPDF2 / python-docx** — reading CV files
 - **BeautifulSoup** — parsing scraped job pages
 
