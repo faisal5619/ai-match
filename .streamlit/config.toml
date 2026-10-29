@@ -1,7 +1,20 @@
 [theme]
-base="light"
-primaryColor="#2563EB"
-backgroundColor="#F7F8FA"
-secondaryBackgroundColor="#FFFFFF"
-textColor="#0F172A"
-font="sans serif"
+# Dark is the default look. The light/dark switch in the app swaps the colours
+# in style.css; these values cover Streamlit's own pieces (menus, alerts).
+base="dark"
+primaryColor="#7ea4ff"
+backgroundColor="#08090A"
+secondaryBackgroundColor="#101113"
+textColor="#E7E8EA"
+font="Instrument Sans:https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap"
+headingFont="Instrument Serif:https://fonts.googleapis.com/css2?family=Instrument+Serif&display=swap"
+baseFontSize=14
+baseRadius="10px"
+buttonRadius="999px"
+borderColor="#2A2C31"
+showWidgetBorder=true
+
+[client]
+toolbarMode="viewer"
+# Visitors see a plain error message, not code and file paths. Details stay in the server logs.
+showErrorDetails="none"

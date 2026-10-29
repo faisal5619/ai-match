@@ -1,0 +1,6 @@
+# Python caches
+__pycache__/
+
+# Secrets never go in git
+.streamlit/secrets.toml
+.env

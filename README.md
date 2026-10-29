@@ -2,8 +2,8 @@
 
 **[Try it live →](https://faisal-ai-match.streamlit.app/)**
 
-No sign-up needed — click **Try the demo →** on the sign-in screen, or use
-`demo@aimatch.app` / `demo1234`.
+No sign-up needed: the site opens straight into the app. Your CV stays in your browser
+session and is cleared when you close the tab.
 
 *Hosted on Streamlit Community Cloud's free tier, which hibernates apps after 12 hours
 without traffic. If it's asleep, the page offers a wake button and takes about 30
@@ -84,14 +84,16 @@ The app opens in your browser at `http://localhost:8501`.
 ```
 ai-match/
 ├── app.py                        # Streamlit interface and app flow
-├── auth_db.py                    # User authentication
+├── style.css                     # Site styling (reads the theme colours from app.py)
+├── assets/
+│   ├── logo.svg                  # Top-bar logo
+│   └── favicon.png               # Browser-tab icon
 ├── agents/
-│   ├── cv_agent.py               # CV parsing and skill extraction
+│   ├── cv_agent.py               # CV parsing, skill extraction, GitHub skill lookup
 │   ├── job_agent.py              # Job description parsing
 │   ├── match_agent.py            # Semantic matching and scoring
 │   └── recommendation_agent.py   # Job ranking and skill-gap analysis
 ├── database/
-│   ├── db.py                     # Database layer
 │   └── vector_agent.py           # Vector index handling
 ├── data/
 │   └── sample_jobs.py            # Sample job postings for the demo
@@ -100,7 +102,7 @@ ai-match/
 
 ## Status
 
-Local demo, not deployed. Runs on sample job data.
+Demo project, live on Streamlit Community Cloud. Matches against 20 sample roles, plus live remote listings when available.
 
 ## Author
 
