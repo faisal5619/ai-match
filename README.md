@@ -42,7 +42,9 @@ Matching runs in two stages, and the distinction matters.
 `sentence-transformers` (`all-MiniLM-L6-v2`) and indexed in FAISS (`IndexFlatL2`). The CV
 is embedded the same way, and FAISS returns the five nearest jobs. This stage recognises
 related wording rather than exact keywords, and it keeps the work manageable as the number
-of jobs grows — only five candidates get scored in detail rather than all of them.
+of example roles grows. Two of the five spots are saved for live jobs: real posts open with
+company marketing, so retrieval rarely picks them, and the live jobs that score best take
+those spots instead.
 
 **Stage 2 — ranking.** Each shortlisted job is then scored two ways:
 

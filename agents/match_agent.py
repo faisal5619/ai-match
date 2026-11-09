@@ -4,6 +4,9 @@ from agents.job_agent import get_job_text
 from agents.cv_agent import clean_text, extract_skills
 from database.vector_agent import build_job_index, search_jobs
 
+SHORTLIST_SIZE = 5
+LIVE_SPOTS = 2  # of the shortlist, saved for real jobs when there are any
+
 
 def tfidf_similarity_score(cv_text, job_text):
     cv = clean_text(cv_text)
@@ -68,12 +71,29 @@ def analyze_job_match(cv_data, job):
     }
 
 
+def with_live_jobs(cv_data, jobs, candidates):
+    """
+    Real posts open with company marketing, so retrieval rarely picks them over the
+    example roles, which read like skill lists. The live jobs that score best take
+    the spots saved for them, replacing the example roles retrieval ranked lowest.
+    """
+    live = [job for job in candidates if job["source"] == "remoteok"]
+    examples = [job for job in candidates if job["source"] != "remoteok"]
+
+    others = [job for job in jobs if job["source"] == "remoteok" and job not in live]
+    others.sort(key=lambda job: analyze_job_match(cv_data, job)["final_score"], reverse=True)
+    live += others[:max(0, LIVE_SPOTS - len(live))]
+
+    return examples[:SHORTLIST_SIZE - len(live)] + live
+
+
 def analyze_all_jobs(cv_data, jobs):
     if not jobs:
         return []
 
     index, _ = build_job_index(jobs)
-    candidate_jobs = search_jobs(cv_data["text"], jobs, index, top_k=min(5, len(jobs)))
+    candidate_jobs = search_jobs(cv_data["text"], jobs, index, top_k=min(SHORTLIST_SIZE, len(jobs)))
+    candidate_jobs = with_live_jobs(cv_data, jobs, candidate_jobs)
 
     results = []
 

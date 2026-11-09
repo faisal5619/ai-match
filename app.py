@@ -1188,7 +1188,9 @@ def page_about():
             <h2>Two stages</h2>
             <p><strong>Retrieval.</strong> Every job description is turned into an embedding with
             sentence-transformers (all-MiniLM-L6-v2) and indexed in FAISS. The CV is embedded the same way,
-            and FAISS returns the five nearest jobs. This stage recognises related wording, not just exact keywords.</p>
+            and FAISS returns the five nearest jobs. This stage recognises related wording, not just exact keywords.
+            Two of the five spots are saved for the live jobs that score best, because real posts rarely read as
+            closely to a CV as the example roles do.</p>
             <p><strong>Ranking.</strong> Each shortlisted job is then scored two ways:</p>
             <table>
               <tr><th>Part</th><th class="num">Weight</th><th>What it measures</th></tr>
