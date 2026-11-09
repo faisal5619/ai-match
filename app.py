@@ -112,6 +112,13 @@ def is_example(job) -> bool:
 def source_tag(job) -> str:
     return " · Example role" if is_example(job) else " · Live job from Remote OK"
 
+def is_senior(job) -> bool:
+    """The score only compares skills, so a senior title is flagged rather than scored."""
+    return bool(re.search(r"\b(senior|sr|staff|principal|lead|head|director)\b", job["title"], re.IGNORECASE))
+
+def seniority_tag(job) -> str:
+    return " · Senior role" if is_senior(job) else ""
+
 def preference_tag(result) -> str:
     """Preferences re-order the roles but aren't part of the fit score, so their points are shown beside it."""
     points = round(result.get("boosted_score", result["final_score"]) - result["final_score"])
@@ -1070,6 +1077,8 @@ def page_dashboard():
                 verdict = "ranks first with your preferences" if shaped else "fits best"
                 finding = (f"<strong>{escape(top_result['title'])}</strong> at {escape(top_result['company'])} "
                            f"{verdict}, at <strong>{total:.1f}%</strong>.")
+                if is_senior(top_result):
+                    finding += " It's a senior role, so check the experience it asks for."
                 if top_result["missing_skills"]:
                     finding += f" Adding {escape(top_result['missing_skills'][0])} to your CV would lift it most."
                 title(finding)
@@ -1104,7 +1113,7 @@ def page_dashboard():
                         {winner_sparks()}
                         <div class="top-head">
                           <div><div class="top-title">{escape(top_result['title'])}</div>
-                            <div class="top-meta">{escape(top_result['company'])} · {escape(top_result['location'])}{source_tag(top_result)}{preference_tag(top_result)}</div>
+                            <div class="top-meta">{escape(top_result['company'])} · {escape(top_result['location'])}{source_tag(top_result)}{seniority_tag(top_result)}{preference_tag(top_result)}</div>
                             <div style="margin-top:10px"><span class="chip chip-fit {'strong' if fit == 'Strong Match' else ''}">{escape(fit)}</span>
                               <span class="top-pick"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>Ranked #1 of {len(match_results)} roles</span></div>
                           </div>
@@ -1150,7 +1159,7 @@ def page_dashboard():
                           <div class="row-top">
                             <div><div class="row-title">{escape(rec['title'])}</div>
                               <div class="row-meta">{escape(rec['company'])} · {escape(rec['location'])} ·
-                                {len(rec['matched_skills'])} of {len(rec['matched_skills']) + len(rec['missing_skills'])} skills{source_tag(result)}{preference_tag(result)}</div></div>
+                                {len(rec['matched_skills'])} of {len(rec['matched_skills']) + len(rec['missing_skills'])} skills{source_tag(result)}{seniority_tag(result)}{preference_tag(result)}</div></div>
                             <div class="row-score num">{rec_total:.1f}%<span class="row-fit">{escape(rec['fit_label'])}</span></div>
                           </div>
                           <div class="row-body">{gaps}</div>

@@ -2,11 +2,13 @@ import html
 import re
 import time
 import requests
+from agents.cv_agent import extract_skills
 from data.sample_jobs import SAMPLE_JOBS
 
 REMOTEOK_API = "https://remoteok.com/api"
 MAX_LIVE_JOBS = 20
-MIN_DESCRIPTION_CHARS = 1000  # shorter posts list too few skills to compare a CV against
+# With fewer known skills a post can't be compared fairly: having 2 of 2 would count as a full match.
+MIN_KNOWN_SKILLS = 4
 MAX_DESCRIPTION_CHARS = 10000  # requirements often come last, so keep most of the post
 LIVE_REFRESH_SECONDS = 3600
 
@@ -54,17 +56,17 @@ def fetch_remoteok():
             if not url.lower().startswith("https://remoteok.com/"):
                 continue
 
-            description = clean_text(item.get("description"))
+            job = {
+                "title": title,
+                "company": clean_text(item.get("company")) or "Unknown",
+                "location": clean_text(item.get("location")) or "Remote",
+                "description": clean_text(item.get("description"))[:MAX_DESCRIPTION_CHARS],
+                "url": url,
+                "source": "remoteok"
+            }
 
-            if TECH_TITLE.search(title) and len(description) >= MIN_DESCRIPTION_CHARS:
-                jobs.append({
-                    "title": title,
-                    "company": clean_text(item.get("company")) or "Unknown",
-                    "location": clean_text(item.get("location")) or "Remote",
-                    "description": description[:MAX_DESCRIPTION_CHARS],
-                    "url": url,
-                    "source": "remoteok"
-                })
+            if TECH_TITLE.search(title) and len(extract_skills(get_job_text(job))) >= MIN_KNOWN_SKILLS:
+                jobs.append(job)
 
             if len(jobs) == MAX_LIVE_JOBS:
                 break
