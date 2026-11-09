@@ -29,7 +29,7 @@ RIYADH = timezone(timedelta(hours=3))
 # ---------------- SESSION DEFAULTS ----------------
 # ---------------- VISIT STORAGE ----------------
 # There are no accounts. What a visitor adds (their CV, preferences and best
-# match) is held in server memory for their session only, and is cleared soon after
+# match) is held in server memory for their session only, and is deleted soon after
 # they close the tab.
 for _key, _default in {"cv_name": None, "cv_bytes": None, "best_match": None,
                        "profile": {"full_name": "", "preferred_location": "", "job_type": "",
@@ -122,6 +122,18 @@ def read_cv(cv_name: str, cv_bytes: bytes):
                       "work experience and skills. Upload your CV as a PDF, Word (.docx) or text file.")
     return cv_data, None
 
+def cv_consent(where: str) -> bool:
+    """The agreement a visitor must tick before uploading a CV. Shared by every upload box in the visit."""
+    with st.container(key=f"consent_{where}"):
+        agreed = st.checkbox("I agree to my CV being processed on servers outside Saudi Arabia to match it against jobs.",
+                             value=st.session_state.get("cv_consent", False), key=f"consent_tick_{where}")
+        st.markdown('<p class="consent-note">It\'s deleted soon after you close the tab.</p>', unsafe_allow_html=True)
+        # A button rather than a link: opening a new address would end the visit and clear the CV.
+        if st.button("Read the Privacy page", key=f"consent_privacy_{where}"):
+            set_page("Privacy")
+    st.session_state.cv_consent = agreed
+    return agreed
+
 def is_example(job) -> bool:
     """The curated roles are written for the demo; only Remote OK listings are real openings."""
     return job.get("source") != "remoteok"
@@ -186,6 +198,7 @@ THEMES = {
         # Small coloured icons, one hue per subject, used sparingly.
         "c-blue": "#6ea8fe", "c-gold": "#e8b84a", "c-green": "#4fd08f", "c-orange": "#f39a5a",
         "c-pink": "#ef84b0", "c-violet": "#a395ff",
+        "consent-no": "#a33a34", "consent-yes": "#3f8a66",
         # Light-only extras (see the light theme); off here.
         "wash-a": "0%", "wash-base": "transparent", "wash-pad": "0", "wash-min": "0", "corner": "flex", "lift": "transparent",
         "ground-wash": "none", "icon-tint": "0%", "icon-pad": "0px", "wash-hover": "1", "bar-bleed": "0px",
@@ -217,6 +230,7 @@ THEMES = {
         "track": "#eceff4", "chip-muted-bg": "#f0f2f6", "chip-muted-ink": "#3c4659",
         "c-blue": "#2f6fd6", "c-gold": "#b7871c", "c-green": "#1d9a5f", "c-orange": "#e0662a",
         "c-pink": "#d4407e", "c-violet": "#5b4ee6",
+        "consent-no": "#9c2f28", "consent-yes": "#2f7a57",
         # The wash behind each card's graphic: how strong its two colours are, over
         # this base. Each card picks its own colours in style.css.
         "wash-a": "42%", "wash-base": "#fdfcff",
@@ -424,7 +438,7 @@ signing up, and this page explains what happens to what you add. Last updated 9 
 <ul>
 <li>The CV you upload, the preferences and name you enter, a GitHub username if you add one, and your
 latest best match. These are sent to the server that runs this site and held in its memory for your
-visit only. They are cleared soon after you close the tab.</li>
+visit only. They are deleted soon after you close the tab.</li>
 <li>AI Match saves none of it after that: there is no database of users or CVs.</li>
 </ul>
 
@@ -432,11 +446,19 @@ visit only. They are cleared soon after you close the tab.</li>
 <p>Only to match your CV against job descriptions and show you the results. Nothing is sold, there are
 no ads and no emails. AI Match itself adds no analytics or tracking, but its host does (see below).</p>
 
+<h2>Legal basis</h2>
+<p>AI Match relies on your consent, which you give by ticking the box before you upload your CV. You can
+withdraw it at any time by removing your CV on the Profile page or closing the tab.</p>
+
+<h2>If you don't upload a CV</h2>
+<p>You can still browse the site, but AI Match can't rank roles for you without one.</p>
+
 <h2>Who else handles it</h2>
 <ul>
 <li><strong>Streamlit Community Cloud</strong> hosts the app, so your CV is processed on its servers,
 outside Saudi Arabia, while you use it. Streamlit also sets its own cookies and runs its own analytics
-(Google Analytics, Segment, Heap and Datadog) on every app it hosts. AI Match can't turn these off; see
+and data tools (Google Analytics, Google Tag Manager, DoubleClick, Segment, Heap, Datadog and Fivetran,
+at webhooks.fivetran.com) on every app it hosts. AI Match can't turn these off; see
 <a class="link" href="https://streamlit.io/privacy-policy" target="_blank" rel="noopener">Streamlit's privacy policy</a>.</li>
 <li><strong>Google Fonts</strong> supplies the site's fonts, so your browser fetches them from Google,
 which sees your IP address
@@ -447,12 +469,15 @@ repositories from GitHub.</li>
 </ul>
 
 <h2>How long it is kept</h2>
-<p>Only for your visit. Everything you add is cleared soon after you close the tab.</p>
+<p>Only for your visit. Everything you add is deleted soon after you close the tab.</p>
 
 <h2>Your rights</h2>
+<p>You have the right to know how your data is used, to access it, to get a copy, to correct it, and to
+have it destroyed.</p>
 <ul>
-<li>Change or remove your CV and preferences at any time on the Profile page, or close the tab.</li>
-<li>For any question about your data, message Faisal on
+<li>Change or remove your CV and preferences at any time on the Profile page.</li>
+<li>Nothing is kept after your visit, so once you close the tab there is nothing left to copy or destroy.</li>
+<li>For any request or question about your data, message Faisal on
 <a class="link" href="{LINKEDIN_URL}" target="_blank" rel="noopener">LinkedIn</a>.</li>
 </ul>
 
@@ -919,10 +944,12 @@ def page_dashboard():
 
     cv_data, cv_problem = None, None
     if run:
-        if st.session_state.cv_name:
-            cv_data, cv_problem = read_cv(st.session_state.cv_name, st.session_state.cv_bytes or b"")
-        else:
+        if not st.session_state.cv_name:
             cv_problem = "Upload a CV first."
+        elif not st.session_state.get("cv_consent"):
+            cv_problem = "Tick the red box above to agree before your CV is matched."
+        else:
+            cv_data, cv_problem = read_cv(st.session_state.cv_name, st.session_state.cv_bytes or b"")
 
     left, right = st.columns([4, 8], gap="small")
 
@@ -930,11 +957,14 @@ def page_dashboard():
         with st.container(key="panel_upload"):
             st.markdown(f'<div class="panel-head">{panel_title("Your CV", "file", "orange")}</div>', unsafe_allow_html=True)
 
+            agreed = cv_consent("matches")
+
             up = st.file_uploader(
                 "Upload a CV (PDF, DOCX or TXT)",
                 type=["pdf", "docx", "txt"],
                 key="cv_uploader",
-                label_visibility="collapsed"
+                label_visibility="collapsed",
+                disabled=not agreed
             )
 
             # The uploader keeps its file across reruns; only a new file counts as a new CV.
@@ -1384,6 +1414,7 @@ def page_profile():
         )
     with panel:
         with st.container(key="panel_cvfile"):
+            agreed = cv_consent("profile")
             if saved_name:
                 st.markdown(
                     f'<div class="row-card" style="margin-bottom:12px"><div class="row-title" '
@@ -1391,7 +1422,8 @@ def page_profile():
                     f'<div class="row-meta">Kept for this visit</div></div>',
                     unsafe_allow_html=True
                 )
-                new_cv = st.file_uploader("Replace CV", type=["pdf", "docx", "txt"], key="profile_cv_upload")
+                new_cv = st.file_uploader("Replace CV", type=["pdf", "docx", "txt"], key="profile_cv_upload",
+                                          disabled=not agreed)
                 if new_cv is not None and new_cv.file_id != st.session_state.get("cv_file_id"):
                     st.session_state.cv_file_id = new_cv.file_id
                     save_user_cv(new_cv.name, new_cv.read())
@@ -1400,7 +1432,8 @@ def page_profile():
             else:
                 st.markdown('<div class="empty" style="margin-bottom:12px">No CV saved yet.</div>',
                             unsafe_allow_html=True)
-                new_cv = st.file_uploader("Upload your CV", type=["pdf", "docx", "txt"], key="profile_cv_upload")
+                new_cv = st.file_uploader("Upload your CV", type=["pdf", "docx", "txt"], key="profile_cv_upload",
+                                          disabled=not agreed)
                 if new_cv is not None and new_cv.file_id != st.session_state.get("cv_file_id"):
                     st.session_state.cv_file_id = new_cv.file_id
                     save_user_cv(new_cv.name, new_cv.read())
@@ -1437,11 +1470,11 @@ if not st.session_state.get("note_closed"):
             'AI Match ranks your CV against a small set of computer science roles: 20 example roles at Saudi '
             'employers, written for the demo and not real openings, plus live remote jobs from Remote OK when '
             'that site answers. Most jobs and fields are not '
-            'covered yet. Your CV goes to this site\'s server, outside Saudi Arabia, and is cleared soon after you '
+            'covered yet. Your CV goes to this site\'s server, outside Saudi Arabia, and is deleted soon after you '
             'close the tab.</span>'
             # The phone version: keeps what a visitor must know, so Home's main button stays near the top.
             '<span class="note-short"><strong>Demo project.</strong> 20 example roles, not real openings, plus live '
-            'remote jobs. Your CV goes to a server outside Saudi Arabia and is cleared soon after you close the '
+            'remote jobs. Your CV goes to a server outside Saudi Arabia and is deleted soon after you close the '
             'tab.</span></p>',
             unsafe_allow_html=True)
         if st.button("Close this notice", key="note_close", icon=":material/close:"):

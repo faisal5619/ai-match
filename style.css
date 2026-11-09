@@ -166,6 +166,31 @@
 /* With the notice above it, a page's header needs less space on top. */
 [data-testid="stLayoutWrapper"]:has(> .st-key-panel_note) ~ * [class*="st-key-hero"] { padding-top: 40px; }
 
+/* ---------- CV consent ----------
+   Dark red until it's ticked, so a first-time visitor can't miss why the upload is locked, then muted green. */
+.st-key-consent_matches, .st-key-consent_profile {
+    gap: 6px; padding: 14px 16px !important; margin-bottom: 8px; border-radius: 12px;
+    border: 1px solid var(--consent-no); background: color-mix(in srgb, var(--consent-no) 20%, transparent);
+    transition: background 200ms var(--ease-out), border-color 200ms var(--ease-out);
+}
+.st-key-consent_matches:has(input:checked), .st-key-consent_profile:has(input:checked) {
+    border-color: var(--consent-yes); background: color-mix(in srgb, var(--consent-yes) 20%, transparent);
+}
+.st-key-consent_matches label:has(input:checked) > div:not([data-testid]),
+.st-key-consent_profile label:has(input:checked) > div:not([data-testid]) {
+    background: var(--consent-yes) !important; border-color: var(--consent-yes) !important;
+}
+.st-key-consent_matches label:has(input:not(:checked)) > div:not([data-testid]),
+.st-key-consent_profile label:has(input:not(:checked)) > div:not([data-testid]) {
+    background: var(--surface) !important; outline: 2px solid var(--consent-no); outline-offset: 1px;
+}
+.consent-note { font-size: 13px; line-height: 1.5; color: var(--text); margin: 0 !important; }
+[class*="st-key-consent_privacy_"] [data-testid^="stBaseButton"] {
+    min-height: 0 !important; padding: 0 !important; border: 0 !important; background: transparent !important;
+    color: var(--accent) !important; font-size: 13px; font-weight: 500;
+}
+[class*="st-key-consent_privacy_"] [data-testid^="stBaseButton"]:hover { text-decoration: underline; }
+
 /* ---------- page header ---------- */
 [class*="st-key-hero"] { padding: 56px 0 8px; }
 @media (max-width: 640px) { [class*="st-key-hero"] { padding: 32px 0 4px; } }

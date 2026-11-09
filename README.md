@@ -3,7 +3,7 @@
 **[Try it live →](https://faisal-ai-match.streamlit.app/)**
 
 No sign-up needed: the site opens straight into the app. Your CV is held on the server
-for your visit only and is cleared soon after you close the tab.
+for your visit only and is deleted soon after you close the tab.
 
 *Hosted on Streamlit Community Cloud's free tier, which hibernates apps after 12 hours
 without traffic. If it's asleep, the page offers a wake button and takes about 30
