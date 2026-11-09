@@ -1,8 +1,7 @@
 streamlit
-PyPDF2
+pypdf>=3.9.0
 python-docx
 scikit-learn
 requests
-beautifulsoup4
 sentence-transformers
 faiss-cpu

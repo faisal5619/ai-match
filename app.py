@@ -29,7 +29,8 @@ RIYADH = timezone(timedelta(hours=3))
 # ---------------- SESSION DEFAULTS ----------------
 # ---------------- VISIT STORAGE ----------------
 # There are no accounts. What a visitor adds (their CV, preferences and best
-# match) lives in their browser session only, and is gone when they close the tab.
+# match) is held in server memory for their session only, and is cleared soon after
+# they close the tab.
 for _key, _default in {"cv_name": None, "cv_bytes": None, "best_match": None,
                        "profile": {"full_name": "", "preferred_location": "", "job_type": "",
                                    "field_of_interest": "", "github_username": ""}}.items():
@@ -77,13 +78,20 @@ if "page" not in st.session_state:
     st.session_state.page = "Home"
 
 # ---------------- HELPERS ----------------
-@st.cache_data(show_spinner=False)
 def cv_skills(cv_name: str, cv_bytes: bytes) -> list:
-    """Skills the matcher detects in a CV. Cached, since Home shows them on every visit."""
+    """
+    Skills the matcher detects in a CV. Home shows them on every load, so they're
+    remembered with the visit. Not st.cache_data: that is shared and outlives the visit.
+    """
+    memo = st.session_state.get("cv_skills_memo")
+    if memo and memo["cv"] == (cv_name, cv_bytes):
+        return memo["skills"]
     try:
-        return analyze_cv(cv_name, cv_bytes)["skills"]
+        skills = analyze_cv(cv_name, cv_bytes)["skills"]
     except Exception:
-        return []
+        skills = []
+    st.session_state.cv_skills_memo = {"cv": (cv_name, cv_bytes), "skills": skills}
+    return skills
 
 def read_cv(cv_name: str, cv_bytes: bytes):
     """The CV's text and skills, or (None, a plain message saying why it couldn't be read)."""
@@ -98,12 +106,20 @@ def read_cv(cv_name: str, cv_bytes: bytes):
     return cv_data, None
 
 def is_example(job) -> bool:
-    """The curated roles are written for the demo; only RemoteOK listings are real openings."""
+    """The curated roles are written for the demo; only Remote OK listings are real openings."""
     return job.get("source") != "remoteok"
+
+def source_tag(job) -> str:
+    return " · Example role" if is_example(job) else " · Live job from Remote OK"
+
+def preference_tag(result) -> str:
+    """Preferences re-order the roles but aren't part of the fit score, so their points are shown beside it."""
+    points = round(result.get("boosted_score", result["final_score"]) - result["final_score"])
+    return f" · +{points} from your preferences" if points > 0 else ""
 
 def job_link_label(job) -> str:
     # An example role has no listing of its own; its link searches for similar real jobs.
-    return "Find similar jobs" if is_example(job) else "View job"
+    return "Find similar jobs" if is_example(job) else "View on Remote OK"
 
 def chips(skills, kind="have"):
     # --i is each chip's position, so the results reveal can stagger them.
@@ -378,13 +394,14 @@ LINKEDIN_URL = "https://www.linkedin.com/in/faisal-alhudaithy/"
 PRIVACY_HTML = f"""
 <div class="prose">
 <p>AI Match is a student project by Faisal Alhudaithy. There are no accounts: you use it without
-signing up, and this page explains what happens to what you add. Last updated 30 October 2026.</p>
+signing up, and this page explains what happens to what you add. Last updated 9 November 2026.</p>
 
 <h2>What it keeps</h2>
 <ul>
 <li>The CV you upload, the preferences and name you enter, a GitHub username if you add one, and your
-latest best match. These stay in your browser session only and are cleared when you close the tab.</li>
-<li>Nothing is saved after you leave: there is no database of users or CVs.</li>
+latest best match. These are sent to the server that runs this site and held in its memory for your
+visit only. They are cleared soon after you close the tab.</li>
+<li>AI Match saves none of it after that: there is no database of users or CVs.</li>
 </ul>
 
 <h2>Why</h2>
@@ -402,11 +419,11 @@ which sees your IP address
 (<a class="link" href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's privacy policy</a>).</li>
 <li><strong>GitHub:</strong> if you add a username, the app reads the languages of your public
 repositories from GitHub.</li>
-<li><strong>RemoteOK</strong> supplies some job listings. Nothing about you is sent to it.</li>
+<li><strong>Remote OK</strong> supplies the live job listings. Nothing about you is sent to it.</li>
 </ul>
 
 <h2>How long it is kept</h2>
-<p>Only for your visit. Everything you add is gone when you close the tab.</p>
+<p>Only for your visit. Everything you add is cleared soon after you close the tab.</p>
 
 <h2>Your rights</h2>
 <ul>
@@ -1000,7 +1017,8 @@ def page_dashboard():
                         # Field boost: +12 if keyword matches
                         if pref_field:
                             keywords = FIELD_KEYWORDS.get(pref_field.lower(), [pref_field])
-                            if any(kw in job_text for kw in keywords):
+                            # Whole words only: "ai" must not match "email" or "training".
+                            if any(re.search(rf"\b{re.escape(kw)}\b", job_text) for kw in keywords):
                                 score += 12
 
                         return min(score, 100)  # cap at 100
@@ -1013,7 +1031,7 @@ def page_dashboard():
                         for r in match_results:
                             r["boosted_score"] = r["final_score"]
 
-                    recommendations = generate_recommendations(match_results, top_n=3)
+                    recommendations = generate_recommendations(match_results, top_n=len(match_results))
                     show_steps(steps_slot, current=4, roles=len(match_results))
 
                     # What shaped the ranking, as one quiet line.
@@ -1049,8 +1067,9 @@ def page_dashboard():
                 top_result = match_results[0]
                 total, breakdown_html = score_breakdown(top_result)
 
+                verdict = "ranks first with your preferences" if shaped else "fits best"
                 finding = (f"<strong>{escape(top_result['title'])}</strong> at {escape(top_result['company'])} "
-                           f"fits best, at <strong>{total:.1f}%</strong>.")
+                           f"{verdict}, at <strong>{total:.1f}%</strong>.")
                 if top_result["missing_skills"]:
                     finding += f" Adding {escape(top_result['missing_skills'][0])} to your CV would lift it most."
                 title(finding)
@@ -1077,8 +1096,7 @@ def page_dashboard():
                     notice = ("This is an example role written for the demo, not a real opening. "
                               "The link searches for similar real jobs.")
                 else:
-                    notice = "AI Match only scores the fit; to apply, open the employer's listing."
-                example_tag = " · Example role" if is_example(top_result) else ""
+                    notice = "A live job from Remote OK. AI Match only scores the fit; to apply, open the listing."
 
                 with st.container(key=f"card_top_{run_no}"):
                     st.markdown(
@@ -1086,7 +1104,7 @@ def page_dashboard():
                         {winner_sparks()}
                         <div class="top-head">
                           <div><div class="top-title">{escape(top_result['title'])}</div>
-                            <div class="top-meta">{escape(top_result['company'])} · {escape(top_result['location'])}{example_tag}</div>
+                            <div class="top-meta">{escape(top_result['company'])} · {escape(top_result['location'])}{source_tag(top_result)}{preference_tag(top_result)}</div>
                             <div style="margin-top:10px"><span class="chip chip-fit {'strong' if fit == 'Strong Match' else ''}">{escape(fit)}</span>
                               <span class="top-pick"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>Ranked #1 of {len(match_results)} roles</span></div>
                           </div>
@@ -1132,7 +1150,7 @@ def page_dashboard():
                           <div class="row-top">
                             <div><div class="row-title">{escape(rec['title'])}</div>
                               <div class="row-meta">{escape(rec['company'])} · {escape(rec['location'])} ·
-                                {len(rec['matched_skills'])} of {len(rec['matched_skills']) + len(rec['missing_skills'])} skills{" · Example role" if is_example(result) else ""}</div></div>
+                                {len(rec['matched_skills'])} of {len(rec['matched_skills']) + len(rec['missing_skills'])} skills{source_tag(result)}{preference_tag(result)}</div></div>
                             <div class="row-score num">{rec_total:.1f}%<span class="row-fit">{escape(rec['fit_label'])}</span></div>
                           </div>
                           <div class="row-body">{gaps}</div>
@@ -1197,8 +1215,8 @@ def page_about():
             st.markdown(f'<div class="panel-head">{panel_title("Built with", "layers", "violet")}</div>', unsafe_allow_html=True)
             stack = [("Python", "The whole system"), ("Streamlit", "This interface"),
                      ("sentence-transformers", "Embeddings for retrieval"), ("FAISS", "Vector index for the shortlist"),
-                     ("scikit-learn", "TF-IDF and cosine similarity"), ("PyPDF2, python-docx", "Reading CV files"),
-                     ("BeautifulSoup", "Parsing job pages")]
+                     ("scikit-learn", "TF-IDF and cosine similarity"), ("pypdf, python-docx", "Reading CV files"),
+                     ("Remote OK API", "Live remote jobs")]
             st.markdown('<div class="rows">' + "".join(
                 f'<div class="row-card"><div class="row-title">{t}</div><div class="row-meta">{d}</div></div>'
                 for t, d in stack) + '</div>', unsafe_allow_html=True)
@@ -1249,7 +1267,7 @@ def page_contact():
         facts_a = [("Author", "Faisal Alhudaithy"),
                    ("Degree", "BSc Computer Science, Artificial Intelligence"),
                    ("University", "King Khalid University")]
-        facts_b = [("Job data", "Sample Saudi roles, or RemoteOK listings when reachable"),
+        facts_b = [("Job data", "Example Saudi roles, plus live jobs from Remote OK when reachable"),
                    ("Hosting", "Streamlit Community Cloud, free tier"),
                    ("If it's asleep", "The free tier sleeps after 12 hours idle; waking takes about 30 seconds")]
         for col, facts in ((a, facts_a), (b, facts_b)):
@@ -1387,9 +1405,10 @@ if not st.session_state.get("note_closed"):
         st.markdown(
             f'<p class="demo-note">{icon("info", "blue")}<span><strong>This is a demonstration project.</strong> '
             'AI Match ranks your CV against a small set of computer science roles: 20 example roles at Saudi '
-            'employers, written for the demo and not real openings, or a handful of live remote listings when '
-            'those are available. Most jobs and fields are not '
-            'covered yet. Your CV stays in this browser tab and is cleared when you close it.</span></p>',
+            'employers, written for the demo and not real openings, plus live remote jobs from Remote OK when '
+            'that site answers. Most jobs and fields are not '
+            'covered yet. Your CV goes to this site\'s server, outside Saudi Arabia, and is cleared soon after you '
+            'close the tab.</span></p>',
             unsafe_allow_html=True)
         if st.button("Close this notice", key="note_close", icon=":material/close:"):
             st.session_state.note_closed = True

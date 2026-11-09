@@ -2,7 +2,7 @@ import re
 from io import BytesIO
 from urllib.parse import quote
 import requests
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 from docx import Document
 
 

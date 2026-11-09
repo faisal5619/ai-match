@@ -1,34 +1,73 @@
+import html
+import re
+import time
 import requests
-from bs4 import BeautifulSoup
 from data.sample_jobs import SAMPLE_JOBS
 
+REMOTEOK_API = "https://remoteok.com/api"
+MAX_LIVE_JOBS = 20
+MIN_DESCRIPTION_CHARS = 1000  # shorter posts list too few skills to compare a CV against
+MAX_DESCRIPTION_CHARS = 10000  # requirements often come last, so keep most of the post
+LIVE_REFRESH_SECONDS = 3600
 
-def scrape_remoteok():
+# The feed's tags are noisy (sales roles carry "engineer"), so roles are picked by title.
+TECH_TITLE = re.compile(
+    r"\b(developer|engineer|engineering|programmer|software|devops|sre|data scien\w+|data analyst|machine learning|ml|ai|"
+    r"security|cloud|backend|back-end|frontend|front-end|full[- ]stack)\b",
+    re.IGNORECASE
+)
+
+# Fetched at most once an hour, for every visitor: it's public job data, and it
+# spares both Remote OK and this free server a request on every analysis.
+_live = {"jobs": [], "fetched_at": None}
+
+
+def clean_text(text):
+    """The feed sends HTML, and characters like curly quotes garbled by a wrong encoding."""
+    text = re.sub(
+        "[\xc2-\xdf][\x80-\xbf]|[\xe0-\xef][\x80-\xbf]{2}",
+        lambda m: m[0].encode("latin-1").decode("utf-8", "ignore"),
+        text or ""
+    )
+    text = html.unescape(re.sub(r"<[^>]+>", " ", text))
+    text = re.sub("[�\x80-\x9f]", "", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def fetch_remoteok():
+    """
+    Live remote jobs from Remote OK's public API. Its terms ask for a link back to
+    each job and a mention of Remote OK as the source; the job cards do both.
+    """
     jobs = []
 
     try:
-        url = "https://remoteok.com/remote-dev-jobs"
         headers = {"User-Agent": "Mozilla/5.0"}
+        r = requests.get(REMOTEOK_API, headers=headers, timeout=10)
 
-        r = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(r.text, "html.parser")
+        # The first item is the API's legal notice, not a job.
+        for item in r.json()[1:]:
+            title = clean_text(item.get("position"))
+            url = item.get("url") or ""
 
-        rows = soup.select("tr.job")
+            # Only links to Remote OK itself are shown as job links.
+            if not url.lower().startswith("https://remoteok.com/"):
+                continue
 
-        for row in rows[:10]:
-            title = row.select_one("h2")
-            company = row.select_one(".companyLink h3")
-            link = row.get("data-href")
+            description = clean_text(item.get("description"))
 
-            if title:
+            if TECH_TITLE.search(title) and len(description) >= MIN_DESCRIPTION_CHARS:
                 jobs.append({
-                    "title": title.text.strip(),
-                    "company": company.text.strip() if company else "Unknown",
-                    "location": "Remote",
-                    "description": title.text.strip(),
-                    "url": f"https://remoteok.com{link}" if link else "#",
+                    "title": title,
+                    "company": clean_text(item.get("company")) or "Unknown",
+                    "location": clean_text(item.get("location")) or "Remote",
+                    "description": description[:MAX_DESCRIPTION_CHARS],
+                    "url": url,
                     "source": "remoteok"
                 })
+
+            if len(jobs) == MAX_LIVE_JOBS:
+                break
 
     except Exception:
         return []
@@ -36,13 +75,16 @@ def scrape_remoteok():
     return jobs
 
 
+def live_jobs():
+    fetched_at = _live["fetched_at"]
+    if fetched_at is None or time.monotonic() - fetched_at > LIVE_REFRESH_SECONDS:
+        _live["jobs"] = fetch_remoteok()
+        _live["fetched_at"] = time.monotonic()
+    return _live["jobs"]
+
+
 def load_jobs():
-    scraped = scrape_remoteok()
-
-    if scraped:
-        return scraped
-
-    return SAMPLE_JOBS
+    return live_jobs() + SAMPLE_JOBS
 
 
 def get_job_text(job):

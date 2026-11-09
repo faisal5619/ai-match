@@ -2,8 +2,8 @@
 
 **[Try it live →](https://faisal-ai-match.streamlit.app/)**
 
-No sign-up needed: the site opens straight into the app. Your CV stays in your browser
-session and is cleared when you close the tab.
+No sign-up needed: the site opens straight into the app. Your CV is held on the server
+for your visit only and is cleared soon after you close the tab.
 
 *Hosted on Streamlit Community Cloud's free tier, which hibernates apps after 12 hours
 without traffic. If it's asleep, the page offers a wake button and takes about 30
@@ -63,8 +63,8 @@ scoring falls back to something more literal.
 - **sentence-transformers** — embeddings for the retrieval stage
 - **FAISS** — vector index for shortlisting candidate jobs
 - **scikit-learn** — TF-IDF and cosine similarity for the scoring stage
-- **PyPDF2 / python-docx** — reading CV files
-- **BeautifulSoup** — parsing scraped job pages
+- **pypdf / python-docx** — reading CV files
+- **Remote OK API** — live remote jobs
 
 ## Running it locally
 
@@ -102,7 +102,7 @@ ai-match/
 
 ## Status
 
-Demo project, live on Streamlit Community Cloud. Matches against 20 sample roles, plus live remote listings when available.
+Demo project, live on Streamlit Community Cloud. Matches against 20 example roles, plus live remote jobs from [Remote OK](https://remoteok.com) when reachable.
 
 ## Author
 

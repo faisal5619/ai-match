@@ -18,3 +18,7 @@ showWidgetBorder=true
 toolbarMode="viewer"
 # Visitors see a plain error message, not code and file paths. Details stay in the server logs.
 showErrorDetails="none"
+
+[server]
+# In megabytes. A CV never needs more, and big uploads could use up the free tier's memory.
+maxUploadSize=5
