@@ -88,16 +88,25 @@
 .st-key-topbar > [data-testid="stLayoutWrapper"]:has(> .st-key-navright) { flex: none; width: auto !important; }
 
 /* Nav buttons: plain text that gets a soft pill on hover; the current page keeps it. */
-.st-key-topbar [data-testid^="stBaseButton"] {
+.st-key-topbar [data-testid^="stBaseButton"], .st-key-subnav_about [data-testid^="stBaseButton"] {
     background: transparent !important; border: 1px solid transparent !important;
     color: var(--muted) !important; font-weight: 500 !important;
     min-height: 34px !important; height: 34px; padding: 0 14px !important; border-radius: 999px !important;
     transition: background-color 160ms ease, color 160ms ease, transform 120ms var(--ease-out) !important;
 }
-.st-key-topbar [data-testid^="stBaseButton"] p { font-size: 14px !important; }
-.st-key-topbar [data-testid^="stBaseButton"]:hover { background: var(--hover) !important; color: var(--text) !important; }
-.st-key-topbar [data-testid^="stBaseButton"]:active { transform: scale(0.96); }
-.st-key-topbar [data-testid="stBaseButton-primary"] { background: var(--active) !important; color: var(--text) !important; }
+.st-key-topbar [data-testid^="stBaseButton"] p, .st-key-subnav_about [data-testid^="stBaseButton"] p { font-size: 14px !important; }
+.st-key-topbar [data-testid^="stBaseButton"]:hover, .st-key-subnav_about [data-testid^="stBaseButton"]:hover { background: var(--hover) !important; color: var(--text) !important; }
+.st-key-topbar [data-testid^="stBaseButton"]:active, .st-key-subnav_about [data-testid^="stBaseButton"]:active { transform: scale(0.96); }
+.st-key-topbar [data-testid="stBaseButton-primary"], .st-key-subnav_about [data-testid="stBaseButton-primary"] { background: var(--active) !important; color: var(--text) !important; }
+
+/* The About pages' own row: hidden where the hover menu works, shown on phones and touch screens. */
+[data-testid="stLayoutWrapper"]:has(> .st-key-subnav_about), .st-key-subnav_about { display: none !important; }
+@media (max-width: 640px), (hover: none) {
+    [data-testid="stLayoutWrapper"]:has(> .st-key-subnav_about) { display: block !important; }
+    .st-key-subnav_about { display: flex !important; gap: 4px !important; padding-top: 12px; }
+    /* No hover, so the menu would only flash open on tap; the row replaces it. */
+    [class*="st-key-navmenu"] { display: none !important; }
+}
 
 /* Hover menus: a group holds its trigger and a small floating menu under it. */
 [class*="st-key-navgroup"] { position: relative; width: auto !important; flex: none; }
@@ -130,6 +139,11 @@
         order: 3; flex: 1 0 100% !important; width: 100% !important;
     }
     .st-key-navlinks { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap !important; }
+    /* Text only, slightly tighter, so all four links fit a 375 px screen; taller for thumbs. */
+    .st-key-navlinks button span:has(> [data-testid="stIconMaterial"]) { display: none; }
+    .st-key-navlinks [data-testid^="stBaseButton"], .st-key-subnav_about [data-testid^="stBaseButton"] {
+        height: 40px; min-height: 40px !important; padding: 0 12px !important;
+    }
     .st-key-topbar [data-testid="stElementContainer"]:has(.brand) { margin-right: auto; }
     .brand span { display: none; }
 }

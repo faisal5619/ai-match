@@ -21,7 +21,7 @@ SAMPLE_JOBS = [
         ai, machine learning, microsoft office, excel, powerpoint, teamwork,
         problem solving, english, and arabic. Internship program in Riyadh.
         """,
-        "url": "https://www.sdaia.gov.sa/en/MediaCenter/Pages/Tenders.aspx",
+        "url": "https://www.jadarat.sa/",
         "source": "sdaia"
     },
     {

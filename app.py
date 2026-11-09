@@ -42,6 +42,7 @@ def load_user_cv():
 
 def save_user_cv(name, data):
     st.session_state.cv_name, st.session_state.cv_bytes = name, data
+    st.session_state.analysis = None  # its matches were for the previous CV
 
 
 def load_user_profile():
@@ -51,6 +52,15 @@ def load_user_profile():
 def save_user_profile(full_name, location, job_type, field, github):
     st.session_state.profile = {"full_name": full_name.strip(), "preferred_location": location, "job_type": job_type,
                                 "field_of_interest": field, "github_username": github.strip()}
+    # Matches already on screen were ranked with the old preferences: rank them again.
+    if load_analysis():
+        st.session_state.rerank = True
+
+
+def load_analysis():
+    """The latest analysis, or None. One made with another CV is out of date, so it's none."""
+    analysis = st.session_state.get("analysis")
+    return analysis if analysis and analysis["cv_name"] == st.session_state.cv_name else None
 
 
 def load_best_match():
@@ -74,6 +84,26 @@ def cv_skills(cv_name: str, cv_bytes: bytes) -> list:
         return analyze_cv(cv_name, cv_bytes)["skills"]
     except Exception:
         return []
+
+def read_cv(cv_name: str, cv_bytes: bytes):
+    """The CV's text and skills, or (None, a plain message saying why it couldn't be read)."""
+    try:
+        cv_data = analyze_cv(cv_name, cv_bytes)
+    except Exception:
+        return None, ("We couldn't open this file. It may be damaged or password-protected. "
+                      "Save it again as a PDF, Word (.docx) or text file and upload it once more.")
+    if not cv_data["text"].strip():
+        return None, ("We couldn't find any text in this file. If it's a scanned image or a photo, "
+                      "upload the original PDF or Word file instead.")
+    return cv_data, None
+
+def is_example(job) -> bool:
+    """The curated roles are written for the demo; only RemoteOK listings are real openings."""
+    return job.get("source") != "remoteok"
+
+def job_link_label(job) -> str:
+    # An example role has no listing of its own; its link searches for similar real jobs.
+    return "Find similar jobs" if is_example(job) else "View job"
 
 def chips(skills, kind="have"):
     # --i is each chip's position, so the results reveal can stagger them.
@@ -348,7 +378,7 @@ LINKEDIN_URL = "https://www.linkedin.com/in/faisal-alhudaithy/"
 PRIVACY_HTML = f"""
 <div class="prose">
 <p>AI Match is a student project by Faisal Alhudaithy. There are no accounts: you use it without
-signing up, and this page explains what happens to what you add. Last updated 28 October 2026.</p>
+signing up, and this page explains what happens to what you add. Last updated 30 October 2026.</p>
 
 <h2>What it keeps</h2>
 <ul>
@@ -359,12 +389,17 @@ latest best match. These stay in your browser session only and are cleared when 
 
 <h2>Why</h2>
 <p>Only to match your CV against job descriptions and show you the results. Nothing is sold, there are
-no ads, no emails, and no analytics or tracking cookies.</p>
+no ads and no emails. AI Match itself adds no analytics or tracking, but its host does (see below).</p>
 
 <h2>Who else handles it</h2>
 <ul>
 <li><strong>Streamlit Community Cloud</strong> hosts the app, so your CV is processed on its servers,
-outside Saudi Arabia, while you use it.</li>
+outside Saudi Arabia, while you use it. Streamlit also sets its own cookies and runs its own analytics
+(Google Analytics, Segment, Heap and Datadog) on every app it hosts. AI Match can't turn these off; see
+<a class="link" href="https://streamlit.io/privacy-policy" target="_blank" rel="noopener">Streamlit's privacy policy</a>.</li>
+<li><strong>Google Fonts</strong> supplies the site's fonts, so your browser fetches them from Google,
+which sees your IP address
+(<a class="link" href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's privacy policy</a>).</li>
 <li><strong>GitHub:</strong> if you add a username, the app reads the languages of your public
 repositories from GitHub.</li>
 <li><strong>RemoteOK</strong> supplies some job listings. Nothing about you is sent to it.</li>
@@ -405,8 +440,8 @@ def set_page(p: str):
 
 # ---------------- TOP BAR ----------------
 # Brand on the left, pages in the middle, the theme switch on the right. "About"
-# opens a small menu on hover (or on tap, on a phone): the menu is a container
-# style.css hides until its group is hovered or focused.
+# opens a small menu on hover: the menu is a container style.css hides until its
+# group is hovered or focused. Touch screens get a row instead (see subnav_about).
 def nav_btn(label, target, key=None, icon=None):
     if st.button(label, key=key or f"nav_{target}", icon=icon,
                  type="primary" if current_page == target else "secondary"):
@@ -432,6 +467,15 @@ with st.container(key="topbar", horizontal=True, vertical_alignment="center", ga
                 nav_btn("Privacy", "Privacy", key="menu_Privacy", icon=":material/shield:")
     with st.container(key="navright", horizontal=True, vertical_alignment="center", gap="small", width="content"):
         theme_toggle("theme_top")
+
+# A touch screen can't hover, so the About menu never opens there. Instead its
+# pages get their own row under the bar while one of them is open; style.css
+# shows this row only on phones and touch screens.
+if current_page in ("About", "Contact", "Privacy"):
+    with st.container(key="subnav_about", horizontal=True, vertical_alignment="center", gap=None):
+        nav_btn("How it works", "About", key="sub_About")
+        nav_btn("Contact", "Contact", key="sub_Contact")
+        nav_btn("Privacy", "Privacy", key="sub_Privacy")
 
 # ════════════════════════════════════════════════════════════════════════════
 #  PAGES
@@ -822,6 +866,8 @@ def page_dashboard():
         with action:
             run = st.button("Analyze my CV", use_container_width=True, key="analyze_btn", type="primary",
                             icon=":material/play_arrow:")
+            # Saved preferences change the ranking, so an existing analysis runs again with them.
+            run = st.session_state.pop("rerank", False) or run
 
     def title(sentence):
         title_slot.markdown(f'<h1 class="page-title">Matches</h1><p class="lede">{sentence}</p>',
@@ -885,14 +931,21 @@ def page_dashboard():
 
     with right:
         with st.container(key="panel_results"):
+            failed = False
             if run:
-                if not st.session_state.cv_bytes or not st.session_state.cv_name:
+                cv_data, cv_problem = None, None
+                if st.session_state.cv_name:
+                    cv_data, cv_problem = read_cv(st.session_state.cv_name, st.session_state.cv_bytes or b"")
+                if not st.session_state.cv_name:
                     st.error("Upload a CV first.")
+                    failed = True
+                elif cv_problem:
+                    st.error(cv_problem)
+                    failed = True
                 else:
                     # The analysis shows its real steps as they happen, in place of a spinner.
                     steps_slot = st.empty()
                     show_steps(steps_slot, current=0)
-                    cv_data = analyze_cv(st.session_state.cv_name, st.session_state.cv_bytes)
 
                     # ── Enrich skills with GitHub ──
                     github_skills = []
@@ -972,106 +1025,125 @@ def page_dashboard():
                     if pref_field:
                         shaped.append(prefs["field_of_interest"])
 
+                    # Kept for this visit, so the results stay on screen when anything else
+                    # on the page changes. A new run number means Streamlit builds the result
+                    # blocks fresh, so the reveal animation plays for each new analysis.
+                    st.session_state.analysis = {
+                        "cv_name": st.session_state.cv_name, "match_results": match_results,
+                        "recommendations": recommendations, "shaped": shaped,
+                        "github_added": len(github_skills) if github_username.strip() else 0}
+                    st.session_state.analysis_runs = st.session_state.get("analysis_runs", 0) + 1
                     if match_results:
-                        top_result = match_results[0]
+                        save_best_match(match_results[0]["title"], match_results[0]["company"],
+                                        score_breakdown(match_results[0])[0])
 
-                        total, breakdown_html = score_breakdown(top_result)
-                        # A new key for every analysis means Streamlit builds the result
-                        # blocks fresh, so the reveal animation plays every time.
-                        st.session_state.analysis_runs = st.session_state.get("analysis_runs", 0) + 1
-                        run_no = st.session_state.analysis_runs
-                        save_best_match(top_result["title"], top_result["company"], total)
+            # The latest analysis of this CV, whether it ran just now or earlier in the visit.
+            analysis = load_analysis()
+            if failed:
+                pass
+            elif analysis and analysis["match_results"]:
+                match_results = analysis["match_results"]
+                recommendations = analysis["recommendations"]
+                shaped = analysis["shaped"]
+                run_no = st.session_state.analysis_runs
+                top_result = match_results[0]
+                total, breakdown_html = score_breakdown(top_result)
 
-                        finding = (f"<strong>{escape(top_result['title'])}</strong> at {escape(top_result['company'])} "
-                                   f"fits best, at <strong>{total:.1f}%</strong>.")
-                        if top_result["missing_skills"]:
-                            finding += f" Adding {escape(top_result['missing_skills'][0])} to your CV would lift it most."
-                        title(finding)
+                finding = (f"<strong>{escape(top_result['title'])}</strong> at {escape(top_result['company'])} "
+                           f"fits best, at <strong>{total:.1f}%</strong>.")
+                if top_result["missing_skills"]:
+                    finding += f" Adding {escape(top_result['missing_skills'][0])} to your CV would lift it most."
+                title(finding)
 
-                        meta_bits = [f"{len(match_results)} roles shortlisted"]
-                        if shaped:
-                            meta_bits.append("ranked with your preferences: " + ", ".join(escape(s) for s in shaped))
-                        if github_username.strip() and github_skills:
-                            meta_bits.append(f"{len(github_skills)} skills added from GitHub")
-                        st.markdown(
-                            f'<div class="panel-head">{panel_title("Best match", "trophy", "gold")}'
-                            f'<span>{" · ".join(meta_bits)}</span></div>',
-                            unsafe_allow_html=True
-                        )
+                meta_bits = [f"{len(match_results)} roles shortlisted"]
+                if shaped:
+                    meta_bits.append("ranked with your preferences: " + ", ".join(escape(s) for s in shaped))
+                if analysis["github_added"]:
+                    meta_bits.append(f'{analysis["github_added"]} skills added from GitHub')
+                st.markdown(
+                    f'<div class="panel-head">{panel_title("Best match", "trophy", "gold")}'
+                    f'<span>{" · ".join(meta_bits)}</span></div>',
+                    unsafe_allow_html=True
+                )
 
-                        best = recommendations[0] if recommendations else None
-                        fit = best["fit_label"] if best else ""
-                        missing_html = (chips(top_result["missing_skills"], "missing")
-                                        or '<span class="muted">None. You cover every listed skill.</span>')
-                        matched_html = (chips(top_result["matched_skills"], "have")
-                                        or '<span class="muted">None of the listed skills yet.</span>')
+                best = recommendations[0] if recommendations else None
+                fit = best["fit_label"] if best else ""
+                missing_html = (chips(top_result["missing_skills"], "missing")
+                                or '<span class="muted">None. You cover every listed skill.</span>')
+                matched_html = (chips(top_result["matched_skills"], "have")
+                                or '<span class="muted">None of the listed skills yet.</span>')
 
-                        notice = "AI Match only scores the fit; to apply, open the employer's listing."
+                if is_example(top_result):
+                    notice = ("This is an example role written for the demo, not a real opening. "
+                              "The link searches for similar real jobs.")
+                else:
+                    notice = "AI Match only scores the fit; to apply, open the employer's listing."
+                example_tag = " · Example role" if is_example(top_result) else ""
 
-                        with st.container(key=f"card_top_{run_no}"):
-                            st.markdown(
-                                f"""
-                                {winner_sparks()}
-                                <div class="top-head">
-                                  <div><div class="top-title">{escape(top_result['title'])}</div>
-                                    <div class="top-meta">{escape(top_result['company'])} · {escape(top_result['location'])}</div>
-                                    <div style="margin-top:10px"><span class="chip chip-fit {'strong' if fit == 'Strong Match' else ''}">{escape(fit)}</span>
-                                      <span class="top-pick"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>Ranked #1 of {len(match_results)} roles</span></div>
-                                  </div>
-                                  <div class="top-score num" aria-label="{total:.1f}% match score">
-                                    <span class="count" aria-hidden="true" style="--to-whole:{int(total)};--to-tenth:{int(round(total * 10)) % 10}"></span><span aria-hidden="true">%</span>
-                                    <small>match score</small></div>
-                                </div>
-                                {breakdown_html}
-                                <div class="skill-block"><div class="label">You have</div>{matched_html}</div>
-                                <div class="skill-block"><div class="label">Missing</div>{missing_html}</div>
-                                <div class="notice">{notice}
-                                  <a class="link" style="float:right" href="{escape(top_result['url'])}" target="_blank">View job</a></div>
-                                """,
-                                unsafe_allow_html=True
-                            )
+                with st.container(key=f"card_top_{run_no}"):
+                    st.markdown(
+                        f"""
+                        {winner_sparks()}
+                        <div class="top-head">
+                          <div><div class="top-title">{escape(top_result['title'])}</div>
+                            <div class="top-meta">{escape(top_result['company'])} · {escape(top_result['location'])}{example_tag}</div>
+                            <div style="margin-top:10px"><span class="chip chip-fit {'strong' if fit == 'Strong Match' else ''}">{escape(fit)}</span>
+                              <span class="top-pick"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>Ranked #1 of {len(match_results)} roles</span></div>
+                          </div>
+                          <div class="top-score num" aria-label="{total:.1f}% match score">
+                            <span class="count" aria-hidden="true" style="--to-whole:{int(total)};--to-tenth:{int(round(total * 10)) % 10}"></span><span aria-hidden="true">%</span>
+                            <small>match score</small></div>
+                        </div>
+                        {breakdown_html}
+                        <div class="skill-block"><div class="label">You have</div>{matched_html}</div>
+                        <div class="skill-block"><div class="label">Missing</div>{missing_html}</div>
+                        <div class="notice">{notice}
+                          <a class="link" style="float:right" href="{escape(top_result['url'])}" target="_blank">{job_link_label(top_result)}</a></div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
-                        with st.container(key=f"whatif_{run_no}"):
-                            # "content" sizes the frame to the simulator itself, so it never
-                            # needs a scrollbar however many rows the skill chips wrap to.
-                            st.iframe(whatif_html(match_results[:3]), height="content")
+                with st.container(key=f"whatif_{run_no}"):
+                    # "content" sizes the frame to the simulator itself, so it never
+                    # needs a scrollbar however many rows the skill chips wrap to.
+                    st.iframe(whatif_html(match_results[:3]), height="content")
 
-                        if len(recommendations) > 1:
-                            st.markdown(f'<div class="panel-head" style="margin-top:24px">{panel_title("Also worth a look", "compass", "blue")}</div>', unsafe_allow_html=True)
-                            rows = ""
-                            # Recommendations are the first match results in the same
-                            # order, but carry only the final score; the breakdown needs
-                            # the full result.
-                            for rec, result in zip(recommendations[1:], match_results[1:]):
-                                rec_total, _ = score_breakdown(result)
-                                gaps = chips(rec["missing_skills"][:5], "missing") or '<span class="muted">No missing skills.</span>'
-                                # Shown on hover: where this role lands if every gap is closed.
-                                if result["missing_skills"]:
-                                    ceiling = round(75.0 + round(0.25 * result["similarity_score"], 1), 1)
-                                    names = ", ".join(escape(s) for s in result["missing_skills"][:3])
-                                    more = (f"Add {names} to your CV and this role reaches "
-                                            f"<strong class='num'>{ceiling:.1f}%</strong>.")
-                                else:
-                                    more = "You cover every skill it lists; only the wording match holds it back."
-                                # The card takes the colour of its fit: green strong, blue moderate, pink weak.
-                                fit_colour = {"Strong Match": "green", "Moderate Match": "blue"}.get(rec["fit_label"], "pink")
-                                rows += f"""
-                                <div class="row-card" style="--wc1:var(--c-{fit_colour})">
-                                  <div class="row-top">
-                                    <div><div class="row-title">{escape(rec['title'])}</div>
-                                      <div class="row-meta">{escape(rec['company'])} · {escape(rec['location'])} ·
-                                        {len(rec['matched_skills'])} of {len(rec['matched_skills']) + len(rec['missing_skills'])} skills</div></div>
-                                    <div class="row-score num">{rec_total:.1f}%<span class="row-fit">{escape(rec['fit_label'])}</span></div>
-                                  </div>
-                                  <div class="row-body">{gaps}</div>
-                                  <div class="row-more"><div>{more}</div></div>
-                                  <a href="{escape(rec['url'])}" target="_blank">View job</a>
-                                </div>"""
-                            st.container(key=f"others_{run_no}").markdown(
-                                f'<div class="rows rows-results">{rows}</div>', unsafe_allow_html=True)
+                if len(recommendations) > 1:
+                    st.markdown(f'<div class="panel-head" style="margin-top:24px">{panel_title("Also worth a look", "compass", "blue")}</div>', unsafe_allow_html=True)
+                    rows = ""
+                    # Recommendations are the first match results in the same
+                    # order, but carry only the final score; the breakdown needs
+                    # the full result.
+                    for rec, result in zip(recommendations[1:], match_results[1:]):
+                        rec_total, _ = score_breakdown(result)
+                        gaps = chips(rec["missing_skills"][:5], "missing") or '<span class="muted">No missing skills.</span>'
+                        # Shown on hover: where this role lands if every gap is closed.
+                        if result["missing_skills"]:
+                            ceiling = round(75.0 + round(0.25 * result["similarity_score"], 1), 1)
+                            names = ", ".join(escape(s) for s in result["missing_skills"][:3])
+                            more = (f"Add {names} to your CV and this role reaches "
+                                    f"<strong class='num'>{ceiling:.1f}%</strong>.")
+                        else:
+                            more = "You cover every skill it lists; only the wording match holds it back."
+                        # The card takes the colour of its fit: green strong, blue moderate, pink weak.
+                        fit_colour = {"Strong Match": "green", "Moderate Match": "blue"}.get(rec["fit_label"], "pink")
+                        rows += f"""
+                        <div class="row-card" style="--wc1:var(--c-{fit_colour})">
+                          <div class="row-top">
+                            <div><div class="row-title">{escape(rec['title'])}</div>
+                              <div class="row-meta">{escape(rec['company'])} · {escape(rec['location'])} ·
+                                {len(rec['matched_skills'])} of {len(rec['matched_skills']) + len(rec['missing_skills'])} skills{" · Example role" if is_example(result) else ""}</div></div>
+                            <div class="row-score num">{rec_total:.1f}%<span class="row-fit">{escape(rec['fit_label'])}</span></div>
+                          </div>
+                          <div class="row-body">{gaps}</div>
+                          <div class="row-more"><div>{more}</div></div>
+                          <a href="{escape(rec['url'])}" target="_blank">{job_link_label(result)}</a>
+                        </div>"""
+                    st.container(key=f"others_{run_no}").markdown(
+                        f'<div class="rows rows-results">{rows}</div>', unsafe_allow_html=True)
 
-                    else:
-                        st.warning("No jobs were available for matching.")
+            elif analysis:
+                st.warning("No jobs were available for matching.")
             else:
                 st.markdown(f'<div class="panel-head">{panel_title("Best match", "trophy", "gold")}</div>'
                             '<div class="empty">Nothing ranked yet. Press <strong>Analyze my CV</strong> and the best '
@@ -1314,8 +1386,9 @@ if not st.session_state.get("note_closed"):
     with st.container(key="panel_note"):
         st.markdown(
             f'<p class="demo-note">{icon("info", "blue")}<span><strong>This is a demonstration project.</strong> '
-            'AI Match ranks your CV against a small set of computer science roles: 20 curated positions in Saudi '
-            'Arabia, or a handful of live remote listings when those are available. Most jobs and fields are not '
+            'AI Match ranks your CV against a small set of computer science roles: 20 example roles at Saudi '
+            'employers, written for the demo and not real openings, or a handful of live remote listings when '
+            'those are available. Most jobs and fields are not '
             'covered yet. Your CV stays in this browser tab and is cleared when you close it.</span></p>',
             unsafe_allow_html=True)
         if st.button("Close this notice", key="note_close", icon=":material/close:"):
