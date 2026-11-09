@@ -93,8 +93,22 @@ def cv_skills(cv_name: str, cv_bytes: bytes) -> list:
     st.session_state.cv_skills_memo = {"cv": (cv_name, cv_bytes), "skills": skills}
     return skills
 
+# Words nearly every CV has, in English and Arabic. Checked here rather than in
+# agents/cv_agent.py, because a push to agents/ needs a manual reboot to take effect.
+CV_WORDS_EN = re.compile(r"\b(education|experience|employment|university|college|bachelor|bachelors|master|masters|"
+                         r"degree|diploma|gpa|internship|certifications?|curriculum vitae|resume|work history|"
+                         r"references|professional summary)\b")
+CV_WORDS_AR = ("السيرة الذاتية", "جامعة", "بكالوريوس", "خبرة", "الخبرات", "مهارات", "المهارات", "التعليم",
+               "المؤهلات", "الشهادات")
+
+def looks_like_cv(text: str, skills: list) -> bool:
+    """A deliberately gentle check: two CV words or three known skills is enough to pass."""
+    lowered = text.lower()
+    cv_words = set(CV_WORDS_EN.findall(lowered)) | {w for w in CV_WORDS_AR if w in text}
+    return len(cv_words) >= 2 or len(skills) >= 3
+
 def read_cv(cv_name: str, cv_bytes: bytes):
-    """The CV's text and skills, or (None, a plain message saying why it couldn't be read)."""
+    """The CV's text and skills, or (None, a plain message saying why it can't be matched)."""
     try:
         cv_data = analyze_cv(cv_name, cv_bytes)
     except Exception:
@@ -103,6 +117,9 @@ def read_cv(cv_name: str, cv_bytes: bytes):
     if not cv_data["text"].strip():
         return None, ("We couldn't find any text in this file. If it's a scanned image or a photo, "
                       "upload the original PDF or Word file instead.")
+    if not looks_like_cv(cv_data["text"], cv_data["skills"]):
+        return None, ("This file doesn't look like a CV, so we didn't rank it. We look for things like education, "
+                      "work experience and skills. Upload your CV as a PDF, Word (.docx) or text file.")
     return cv_data, None
 
 def is_example(job) -> bool:
@@ -577,7 +594,7 @@ def page_home():
         fact = (f"Your best match so far is <strong>{escape(last['title'])}</strong> at "
                 f"{escape(last['company'])}, at <strong>{last['score']:.0f}%</strong>.")
     elif saved_name:
-        fact = f"Your CV <strong>{escape(saved_name)}</strong> is ready to match."
+        fact = f"<strong>{escape(saved_name)}</strong> is saved for this visit."
     else:
         fact = "Upload a CV to see which roles it fits."
 
@@ -900,6 +917,13 @@ def page_dashboard():
     title("Rank the open roles against your CV, and see which skills each one is missing.")
     st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
 
+    cv_data, cv_problem = None, None
+    if run:
+        if st.session_state.cv_name:
+            cv_data, cv_problem = read_cv(st.session_state.cv_name, st.session_state.cv_bytes or b"")
+        else:
+            cv_problem = "Upload a CV first."
+
     left, right = st.columns([4, 8], gap="small")
 
     with left:
@@ -916,8 +940,15 @@ def page_dashboard():
             # The uploader keeps its file across reruns; only a new file counts as a new CV.
             if up is not None and up.file_id != st.session_state.get("cv_file_id"):
                 st.session_state.cv_file_id = up.file_id
-                save_user_cv(up.name, up.read())
-                st.toast("CV ready to match.", icon=":material/check:")
+                cv_bytes = up.read()
+                save_user_cv(up.name, cv_bytes)
+                cv_problem = read_cv(up.name, cv_bytes)[1]
+                if not cv_problem:
+                    st.toast("CV ready to match.", icon=":material/check:")
+
+            # Shown here, not with the results: on a phone those are far below the Analyze button.
+            if cv_problem:
+                st.error(cv_problem)
 
             if st.session_state.cv_name:
                 st.markdown(
@@ -955,18 +986,8 @@ def page_dashboard():
 
     with right:
         with st.container(key="panel_results"):
-            failed = False
             if run:
-                cv_data, cv_problem = None, None
-                if st.session_state.cv_name:
-                    cv_data, cv_problem = read_cv(st.session_state.cv_name, st.session_state.cv_bytes or b"")
-                if not st.session_state.cv_name:
-                    st.error("Upload a CV first.")
-                    failed = True
-                elif cv_problem:
-                    st.error(cv_problem)
-                    failed = True
-                else:
+                if not cv_problem:
                     # The analysis shows its real steps as they happen, in place of a spinner.
                     steps_slot = st.empty()
                     show_steps(steps_slot, current=0)
@@ -1064,9 +1085,7 @@ def page_dashboard():
 
             # The latest analysis of this CV, whether it ran just now or earlier in the visit.
             analysis = load_analysis()
-            if failed:
-                pass
-            elif analysis and analysis["match_results"]:
+            if analysis and analysis["match_results"]:
                 match_results = analysis["match_results"]
                 recommendations = analysis["recommendations"]
                 shaped = analysis["shaped"]
@@ -1414,12 +1433,16 @@ if st.session_state.page not in PAGES:
 if not st.session_state.get("note_closed"):
     with st.container(key="panel_note"):
         st.markdown(
-            f'<p class="demo-note">{icon("info", "blue")}<span><strong>This is a demonstration project.</strong> '
+            f'<p class="demo-note">{icon("info", "blue")}<span class="note-long"><strong>This is a demonstration project.</strong> '
             'AI Match ranks your CV against a small set of computer science roles: 20 example roles at Saudi '
             'employers, written for the demo and not real openings, plus live remote jobs from Remote OK when '
             'that site answers. Most jobs and fields are not '
             'covered yet. Your CV goes to this site\'s server, outside Saudi Arabia, and is cleared soon after you '
-            'close the tab.</span></p>',
+            'close the tab.</span>'
+            # The phone version: keeps what a visitor must know, so Home's main button stays near the top.
+            '<span class="note-short"><strong>Demo project.</strong> 20 example roles, not real openings, plus live '
+            'remote jobs. Your CV goes to a server outside Saudi Arabia and is cleared soon after you close the '
+            'tab.</span></p>',
             unsafe_allow_html=True)
         if st.button("Close this notice", key="note_close", icon=":material/close:"):
             st.session_state.note_closed = True
